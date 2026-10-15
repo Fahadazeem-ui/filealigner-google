@@ -3,7 +3,7 @@ import { ThemeColors } from '../engine/themes';
 import { UserCustomRule } from '../types';
 import { TOP_LEVEL_DOMAINS } from '../engine/taxonomy';
 import { checkUserRules } from '../engine/classifier';
-import { BookOpen, Plus, Trash2, CheckCircle2, ArrowRight, Play, Sparkles } from 'lucide-react';
+import { BookOpen, Plus, Trash2, CheckCircle2, ArrowRight, Play, Sparkles, Folder, Tag } from 'lucide-react';
 
 interface RulesViewProps {
   theme: ThemeColors;
@@ -55,64 +55,68 @@ export const RulesView: React.FC<RulesViewProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden select-none">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden select-none">
       {/* Top Banner */}
       <div 
-        className="p-4 border-b space-y-1"
-        style={{ backgroundColor: theme.panel, borderColor: theme.border }}
+        className="px-6 py-4 border-b space-y-1 transition-colors duration-200"
+        style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder }}
       >
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5" style={{ color: theme.accent }} />
-          <h2 className="text-sm font-bold tracking-tight" style={{ color: theme.fg }}>
-            Custom User Classification Rules
-          </h2>
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+            style={{ backgroundColor: theme.pillActiveBg, color: theme.pillActiveFg }}
+          >
+            <BookOpen className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold tracking-tight" style={{ color: theme.fg }}>
+              Custom Taxonomy & Routing Rules
+            </h2>
+            <p className="text-[11px]" style={{ color: theme.fg_muted }}>
+              Custom rules execute with priority (99% confidence), matching exact extensions or regex patterns.
+            </p>
+          </div>
         </div>
-        <p className="text-xs" style={{ color: theme.fg_muted }}>
-          Extend the default taxonomy with your own folder routing rules (stored in <code className="font-mono text-[11px] px-1 py-0.5 rounded bg-black/10 dark:bg-black/25">~/.file_sorter/rules.json</code>). Custom rules execute first with 99% confidence.
-        </p>
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden">
         {/* Left pane: Rule list & Add rule form */}
-        <div 
-          className="lg:col-span-8 flex flex-col border-r overflow-y-auto p-4 space-y-4"
-          style={{ backgroundColor: theme.bg, borderColor: theme.border }}
-        >
+        <div className="lg:col-span-8 flex flex-col border-r overflow-y-auto p-6 space-y-4" style={{ borderColor: theme.panelBorder }}>
           {/* Add Rule Form */}
           <form 
             onSubmit={handleAddRule}
-            className="p-3.5 rounded-lg border space-y-3 shadow-xs"
-            style={{ backgroundColor: theme.card, borderColor: theme.border }}
+            className="p-5 rounded-3xl border space-y-4 shadow-sm"
+            style={{ backgroundColor: theme.cardBg, borderColor: theme.cardBorder }}
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold" style={{ color: theme.fg }}>Add New Custom Rule</span>
-              <div className="flex items-center gap-2 text-xs">
-                <label className="flex items-center gap-1 cursor-pointer">
+              <div className="flex items-center gap-3 text-xs">
+                <label className="flex items-center gap-1.5 cursor-pointer font-medium" style={{ color: theme.fg }}>
                   <input
                     type="radio"
                     name="ruleType"
                     checked={newRuleType === 'extension'}
                     onChange={() => setNewRuleType('extension')}
-                    className="accent-blue-600"
+                    className="accent-indigo-500"
                   />
                   <span>Extension (.ext)</span>
                 </label>
-                <label className="flex items-center gap-1 cursor-pointer ml-2">
+                <label className="flex items-center gap-1.5 cursor-pointer font-medium" style={{ color: theme.fg }}>
                   <input
                     type="radio"
                     name="ruleType"
                     checked={newRuleType === 'regex'}
                     onChange={() => setNewRuleType('regex')}
-                    className="accent-blue-600"
+                    className="accent-indigo-500"
                   />
                   <span>Regex Pattern</span>
                 </label>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] uppercase font-bold opacity-70 block mb-1">
+                <label className="text-[10px] uppercase font-bold opacity-60 block mb-1">
                   {newRuleType === 'extension' ? 'Extension (e.g. .blend or .dat)' : 'Regex pattern (e.g. ^invoice.*\\.pdf$)'}
                 </label>
                 <input
@@ -121,46 +125,26 @@ export const RulesView: React.FC<RulesViewProps> = ({
                   value={newRulePattern}
                   onChange={e => setNewRulePattern(e.target.value)}
                   placeholder={newRuleType === 'extension' ? '.xyz' : '^my_file_.*'}
-                  className="w-full px-2.5 py-1.5 rounded border text-xs font-mono outline-none"
+                  className="w-full px-3 py-2 rounded-2xl border text-xs font-mono outline-none"
                   style={{
-                    backgroundColor: theme.entry_bg,
-                    borderColor: theme.border,
+                    backgroundColor: theme.entryBg,
+                    borderColor: theme.entryBorder,
                     color: theme.fg,
                   }}
                 />
               </div>
 
               <div>
-                <label className="text-[10px] uppercase font-bold opacity-70 block mb-1">
-                  Rule Description (optional)
-                </label>
-                <input
-                  type="text"
-                  value={newRuleDesc}
-                  onChange={e => setNewRuleDesc(e.target.value)}
-                  placeholder="e.g. My client invoices"
-                  className="w-full px-2.5 py-1.5 rounded border text-xs outline-none"
-                  style={{
-                    backgroundColor: theme.entry_bg,
-                    borderColor: theme.border,
-                    color: theme.fg,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-end">
-              <div>
-                <label className="text-[10px] uppercase font-bold opacity-70 block mb-1">
-                  Destination Domain
+                <label className="text-[10px] uppercase font-bold opacity-60 block mb-1">
+                  Destination Top Category
                 </label>
                 <select
                   value={newRuleTopDomain}
                   onChange={e => setNewRuleTopDomain(e.target.value)}
-                  className="w-full px-2.5 py-1.5 rounded border text-xs outline-none"
+                  className="w-full px-3 py-2 rounded-2xl border text-xs font-medium outline-none cursor-pointer"
                   style={{
-                    backgroundColor: theme.entry_bg,
-                    borderColor: theme.border,
+                    backgroundColor: theme.entryBg,
+                    borderColor: theme.entryBorder,
                     color: theme.fg,
                   }}
                 >
@@ -169,20 +153,40 @@ export const RulesView: React.FC<RulesViewProps> = ({
                   ))}
                 </select>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] uppercase font-bold opacity-70 block mb-1">
-                  Sub-Folder Name (optional)
+                <label className="text-[10px] uppercase font-bold opacity-60 block mb-1">
+                  Sub-Folder Name (Optional)
                 </label>
                 <input
                   type="text"
                   value={newRuleSubFolder}
                   onChange={e => setNewRuleSubFolder(e.target.value)}
-                  placeholder="e.g. Projects or 2026 Invoices"
-                  className="w-full px-2.5 py-1.5 rounded border text-xs outline-none"
+                  placeholder="e.g. 3D Models or Invoices"
+                  className="w-full px-3 py-2 rounded-2xl border text-xs outline-none"
                   style={{
-                    backgroundColor: theme.entry_bg,
-                    borderColor: theme.border,
+                    backgroundColor: theme.entryBg,
+                    borderColor: theme.entryBorder,
+                    color: theme.fg,
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60 block mb-1">
+                  Description / Human Label (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={newRuleDesc}
+                  onChange={e => setNewRuleDesc(e.target.value)}
+                  placeholder="e.g. Blender Workspace Files"
+                  className="w-full px-3 py-2 rounded-2xl border text-xs outline-none"
+                  style={{
+                    backgroundColor: theme.entryBg,
+                    borderColor: theme.entryBorder,
                     color: theme.fg,
                   }}
                 />
@@ -192,113 +196,127 @@ export const RulesView: React.FC<RulesViewProps> = ({
             <div className="flex justify-end pt-1">
               <button
                 type="submit"
-                className="px-4 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 shadow-xs"
-                style={{ backgroundColor: theme.accent, color: theme.accent_fg }}
+                className="px-5 py-2 rounded-2xl text-xs font-bold shadow-md transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                style={{
+                  background: theme.accentGradient,
+                  color: theme.accent_fg,
+                  boxShadow: theme.accentGlow,
+                }}
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add Custom Rule
+                <span>Add Rule</span>
               </button>
             </div>
           </form>
 
-          {/* Current Rules List */}
+          {/* Active Rules List */}
           <div className="space-y-2">
-            <span className="text-xs font-bold opacity-70 block">Active Custom Rules ({userRules.length})</span>
-            {userRules.map(rule => (
-              <div
-                key={rule.id}
-                className="p-3 rounded-lg border flex items-center justify-between text-xs transition-colors"
-                style={{ backgroundColor: theme.card, borderColor: theme.border }}
-              >
-                <div className="space-y-1 min-w-0 pr-3">
-                  <div className="flex items-center gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider px-1 opacity-70" style={{ color: theme.fg }}>
+              Configured Rules ({userRules.length})
+            </h3>
+
+            {userRules.length === 0 ? (
+              <div className="py-12 text-center text-xs opacity-60" style={{ color: theme.fg_muted }}>
+                No custom rules defined yet. Add a rule above to customize file placement.
+              </div>
+            ) : (
+              userRules.map(rule => (
+                <div
+                  key={rule.id}
+                  className="p-3.5 rounded-2xl border flex items-center justify-between gap-3 text-xs shadow-xs transition-all hover:scale-[1.005]"
+                  style={{ backgroundColor: theme.cardBg, borderColor: theme.cardBorder }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
                     <span 
-                      className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase"
-                      style={{ backgroundColor: `${theme.accent}22`, color: theme.accent }}
+                      className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase"
+                      style={{
+                        backgroundColor: theme.pillActiveBg,
+                        color: theme.pillActiveFg,
+                      }}
                     >
                       {rule.type}
                     </span>
-                    <span className="font-mono font-semibold text-xs">{rule.pattern}</span>
-                    <ArrowRight className="w-3.5 h-3.5 opacity-40 shrink-0" />
-                    <span className="font-semibold text-xs" style={{ color: theme.ok }}>
-                      {rule.destination.join(' / ')}
+                    <span className="font-mono font-bold truncate" style={{ color: theme.fg }}>
+                      {rule.pattern}
                     </span>
+                    <ArrowRight className="w-3.5 h-3.5 opacity-50 shrink-0" />
+                    <span className="font-semibold truncate flex items-center gap-1" style={{ color: theme.accent }}>
+                      <Folder className="w-3.5 h-3.5" />
+                      {rule.destination.join('/')}
+                    </span>
+                    {rule.description && (
+                      <span className="text-[11px] opacity-60 truncate">({rule.description})</span>
+                    )}
                   </div>
-                  {rule.description && (
-                    <p className="text-[11px] opacity-70">{rule.description}</p>
-                  )}
-                </div>
 
-                <button
-                  onClick={() => handleDeleteRule(rule.id)}
-                  className="p-1.5 rounded hover:bg-red-500/10 text-red-400 hover:text-red-500 transition-colors"
-                  title="Delete rule"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                  <button
+                    onClick={() => handleDeleteRule(rule.id)}
+                    className="p-1.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                    title="Delete Rule"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         {/* Right pane: Interactive Rule Tester */}
         <div 
-          className="lg:col-span-4 p-4 flex flex-col border-t lg:border-t-0 space-y-4 overflow-y-auto"
-          style={{ backgroundColor: theme.detail_bg, color: theme.fg }}
+          className="lg:col-span-4 p-6 space-y-5 overflow-y-auto glass-panel select-none"
+          style={{ backgroundColor: theme.sidebarBg }}
         >
-          <div className="border-b pb-2 flex items-center gap-2">
+          <div className="flex items-center gap-2 pb-3 border-b" style={{ borderColor: theme.panelBorder }}>
             <Sparkles className="w-4 h-4" style={{ color: theme.accent }} />
-            <span className="text-xs font-bold uppercase tracking-wider opacity-70">
-              Interactive Rule Tester
-            </span>
+            <span className="font-bold text-xs" style={{ color: theme.fg }}>Live Rule Simulator</span>
           </div>
 
-          <div className="space-y-2 text-xs">
-            <label className="text-[11px] font-medium opacity-80 block">
-              Enter any file name to test which rule applies:
+          <div className="space-y-3">
+            <label className="text-xs font-semibold block" style={{ color: theme.fg }}>
+              Test Filename:
             </label>
             <input
               type="text"
               value={testFilename}
               onChange={e => setTestFilename(e.target.value)}
-              placeholder="e.g. invoice_2026.pdf"
-              className="w-full px-3 py-1.5 rounded border text-xs font-mono outline-none"
+              placeholder="e.g. project_assets_2026.zip"
+              className="w-full px-3 py-2 rounded-2xl border text-xs font-mono outline-none"
               style={{
-                backgroundColor: theme.entry_bg,
-                borderColor: theme.border,
+                backgroundColor: theme.entryBg,
+                borderColor: theme.entryBorder,
                 color: theme.fg,
               }}
             />
           </div>
 
           <div 
-            className="p-3.5 rounded-lg border space-y-3 text-xs"
-            style={{ backgroundColor: theme.card, borderColor: theme.border }}
+            className="p-4 rounded-3xl border space-y-3"
+            style={{ backgroundColor: theme.cardBg, borderColor: theme.cardBorder }}
           >
-            <span className="text-[11px] font-bold uppercase opacity-60 block">Tester Verdict Result</span>
+            <div className="text-xs font-bold" style={{ color: theme.fg }}>Simulation Result:</div>
+
             {testVerdict ? (
               <div className="space-y-2">
-                <div className="flex items-center gap-1.5 font-bold" style={{ color: theme.ok }}>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Custom Rule Matched! (99% Confidence)</span>
+                  <span>Rule Match Success!</span>
                 </div>
-                <div>
-                  <span className="text-[11px] opacity-70">Target Path:</span>
-                  <div className="font-mono font-semibold text-xs mt-0.5" style={{ color: theme.accent }}>
-                    {testVerdict.path}
+                <div className="text-xs space-y-1">
+                  <div>
+                    <span className="opacity-60">Routed to: </span>
+                    <strong style={{ color: theme.accent }}>{testVerdict.path}</strong>
                   </div>
-                </div>
-                <div>
-                  <span className="text-[11px] opacity-70">Evidence Chain:</span>
-                  <div className="p-2 rounded mt-1 bg-black/10 dark:bg-black/20 font-mono text-[11px]">
-                    {testVerdict.evidence[0]}
+                  <div>
+                    <span className="opacity-60">Confidence: </span>
+                    <strong style={{ color: theme.ok }}>{Math.round(testVerdict.confidence * 100)}% ({testVerdict.level})</strong>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-xs opacity-70 space-y-1">
-                <p>No custom rule matched <span className="font-mono">"{testFilename}"</span>.</p>
-                <p className="text-[11px] opacity-60">FileSorter will fall back to its internal content-aware fingerprinting and taxonomy tables.</p>
+              <div className="text-xs opacity-70 italic space-y-1" style={{ color: theme.fg_muted }}>
+                <p>No custom user rule matched this filename.</p>
+                <p>It will fall through to default content signature analysis.</p>
               </div>
             )}
           </div>

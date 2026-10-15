@@ -4,16 +4,17 @@
   body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     user-select: none;
     -webkit-user-select: none;
+    overflow: hidden;
   }
 }
 
 /* Subtle Aurora scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -21,10 +22,48 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(150, 150, 150, 0.3);
-  border-radius: 4px;
+  background: rgba(140, 155, 185, 0.28);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 150, 150, 0.5);
+  background: rgba(140, 155, 185, 0.45);
+}
+
+/* Soft blooming ambient animations */
+@keyframes bloomFloat {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(25px, -20px) scale(1.08);
+    opacity: 0.85;
+  }
+}
+
+@keyframes bloomFloatReverse {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-30px, 20px) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.animate-bloom-1 {
+  animation: bloomFloat 14s ease-in-out infinite;
+}
+
+.animate-bloom-2 {
+  animation: bloomFloatReverse 18s ease-in-out infinite;
+}
+
+/* Smooth glass transition helper */
+.glass-panel {
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
