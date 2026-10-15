@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FileSorter 5.0 – Content-Aware Sort + Search</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: rgba(22, 28, 46, 0.65);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --card-hover: rgba(35, 45, 75, 0.55);
+      --panel: rgba(18, 23, 38, 0.72);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --sidebar: rgba(14, 18, 30, 0.55);
+      --fg: #e8edf8;
+      --fg-muted: #94a3b8;
+      --accent: #818cf8;
+      --accent-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+      --accent-glow: 0 8px 24px -4px rgba(99, 102, 241, 0.5);
+      --pill-active-bg: linear-gradient(135deg, rgba(129, 140, 248, 0.35) 0%, rgba(99, 102, 241, 0.25) 100%);
+      --pill-active-fg: #ffffff;
+      --storage-grad: linear-gradient(90deg, #818cf8 0%, #a78bfa 50%, #38bdf8 100%);
+      --ok: #34d399;
+      --warn: #fb923c;
+      --window-shadow: 0 30px 90px -20px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+      --canvas-grad: radial-gradient(ellipse at 25% 20%, rgba(99, 102, 241, 0.22) 0%, transparent 60%), radial-gradient(ellipse at 75% 75%, rgba(139, 92, 246, 0.2) 0%, transparent 60%), #0b0f19;
+    }
+
+    [data-theme="cool"] {
+      --bg: #eef4f8;
+      --card: rgba(255, 255, 255, 0.75);
+      --card-border: rgba(255, 255, 255, 0.8);
+      --card-hover: rgba(255, 255, 255, 0.95);
+      --panel: rgba(255, 255, 255, 0.72);
+      --panel-border: rgba(255, 255, 255, 0.85);
+      --sidebar: rgba(255, 255, 255, 0.5);
+      --fg: #1e293b;
+      --fg-muted: #64748b;
+      --accent: #6366f1;
+      --accent-grad: linear-gradient(135deg, #818cf8 0%, #6ee7b7 100%);
+      --accent-glow: 0 8px 24px -4px rgba(99, 102, 241, 0.35);
+      --pill-active-bg: linear-gradient(135deg, rgba(199, 210, 254, 0.85) 0%, rgba(224, 231, 255, 0.95) 100%);
+      --pill-active-fg: #4338ca;
+      --storage-grad: linear-gradient(90deg, #818cf8 0%, #6ee7b7 100%);
+      --ok: #10b981;
+      --warn: #f97316;
+      --window-shadow: 0 30px 80px -15px rgba(148, 163, 184, 0.45), 0 0 1px 1px rgba(255, 255, 255, 0.9);
+      --canvas-grad: radial-gradient(ellipse at 15% 15%, rgba(199, 210, 254, 0.7) 0%, transparent 60%), radial-gradient(ellipse at 85% 25%, rgba(167, 243, 208, 0.55) 0%, transparent 60%), #eef4f8;
+    }
+
+    [data-theme="warm"] {
+      --bg: #fbf6f3;
+      --card: rgba(255, 255, 255, 0.8);
+      --card-border: rgba(255, 255, 255, 0.85);
+      --card-hover: rgba(255, 255, 255, 0.98);
+      --panel: rgba(255, 255, 255, 0.75);
+      --panel-border: rgba(255, 255, 255, 0.88);
+      --sidebar: rgba(255, 255, 255, 0.55);
+      --fg: #29201d;
+      --fg-muted: #786560;
+      --accent: #fb7185;
+      --accent-grad: linear-gradient(135deg, #fda4af 0%, #fb7185 50%, #c084fc 100%);
+      --accent-glow: 0 8px 24px -4px rgba(251, 113, 133, 0.4);
+      --pill-active-bg: linear-gradient(135deg, #fecdd3 0%, #fed7aa 100%);
+      --pill-active-fg: #9f1239;
+      --storage-grad: linear-gradient(90deg, #fda4af 0%, #c084fc 100%);
+      --ok: #059669;
+      --warn: #ea580c;
+      --window-shadow: 0 30px 80px -15px rgba(244, 162, 176, 0.4), 0 0 1px 1px rgba(255, 255, 255, 0.95);
+      --canvas-grad: radial-gradient(ellipse at 15% 15%, rgba(254, 205, 211, 0.7) 0%, transparent 60%), radial-gradient(ellipse at 85% 25%, rgba(254, 215, 170, 0.6) 0%, transparent 60%), #fbf6f3;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: var(--canvas-grad);
+      color: var(--fg);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* Ambient bloom orbs */
+    .bloom-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb-1 {
+      top: -10%;
+      left: 10%;
+      width: 500px;
+      height: 500px;
+      background: rgba(129, 140, 248, 0.25);
+    }
+
+    .orb-2 {
+      bottom: -10%;
+      right: 10%;
+      width: 600px;
+      height: 600px;
+      background: rgba(167, 139, 250, 0.2);
+    }
+
+    /* Desktop Window Container with Glassmorphism */
+    .app-window {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 1440px;
+      height: 92vh;
+      background: var(--panel);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1px solid var(--panel-border);
+      border-radius: 32px;
+      box-shadow: var(--window-shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* Titlebar */
+    .titlebar {
+      height: 38px;
+      background: var(--sidebar);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--fg-muted);
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .dot-red { background: #f43f5e; }
+    .dot-amber { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+
+    /* Window Body */
+    .window-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--card-border);
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      background: var(--accent-grad);
+      box-shadow: var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .brand-text h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--fg);
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--fg-muted);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--fg);
+      transition: all 0.2s;
+      margin-bottom: 6px;
+      border: 1px solid transparent;
+    }
+
+    .nav-item.active {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-fg);
+      border-color: var(--card-border);
+    }
+
+    .storage-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 14px;
+      font-size: 12px;
+      margin-top: 16px;
+    }
+
+    .storage-bar {
+      width: 100%;
+      height: 7px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 8px 0;
+      padding: 1px;
+    }
+
+    .storage-progress {
+      height: 100%;
+      width: 42%;
+      background: var(--storage-grad);
+      border-radius: 99px;
+    }
+
+    /* Main Area */
+    .main-canvas {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* Header Toolbar */
+    .toolbar {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .segmented-pill {
+      background: rgba(0,0,0,0.15);
+      border: 1px solid var(--card-border);
+      border-radius: 99px;
+      padding: 3px;
+      display: flex;
+      align-items: center;
+    }
+
+    .pill-btn {
+      padding: 6px 18px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--fg-muted);
+      transition: all 0.2s;
+    }
+
+    .pill-btn.active {
+      background: var(--pill-active-bg);
+      color: var(--pill-active-fg);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+    }
+
+    .search-input {
+      background: rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--card-border);
+      border-radius: 99px;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--fg);
+      outline: none;
+      width: 220px;
+      transition: width 0.2s;
+    }
+    .search-input:focus { width: 280px; }
+
+    /* Action bar */
+    .action-bar {
+      padding: 12px 24px;
+      background: rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn-gradient {
+      background: var(--accent-grad);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 8px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--accent-glow);
+      transition: transform 0.15s;
+    }
+    .btn-gradient:hover { transform: scale(1.03); }
+
+    .btn-secondary {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      color: var(--fg);
+      border-radius: 16px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { transform: scale(1.03); }
+
+    /* Content Split Area */
+    .content-area {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .file-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .file-row {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .file-row:hover {
+      transform: scale(1.006);
+      background: var(--card-hover);
+    }
+    .file-row.active {
+      border-color: var(--accent);
+      background: var(--pill-active-bg);
+    }
+
+    .file-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .badge-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .badge-folder { background: rgba(167, 139, 250, 0.2); color: #c4b5fd; border: 1px solid rgba(167, 139, 250, 0.35); }
+    .badge-pdf { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.35); }
+    .badge-img { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .badge-doc { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.35); }
+    .badge-zip { background: rgba(192, 132, 252, 0.2); color: #e9d5ff; border: 1px solid rgba(192, 132, 252, 0.35); }
+
+    .file-title h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .file-title p {
+      font-size: 11px;
+      color: var(--fg-muted);
+      margin-top: 2px;
+    }
+
+    .pill-tag {
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: var(--fg);
+    }
+
+    .pill-sure {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--ok);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    /* Collapsible Inspector Drawer */
+    .inspector {
+      width: 340px;
+      background: var(--sidebar);
+      border-left: 1px solid var(--card-border);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow-y: auto;
+      transition: width 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+    }
+
+    .inspector.closed {
+      width: 0;
+      padding: 0;
+      opacity: 0;
+      border: none;
+      overflow: hidden;
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .inspector-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .path-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--accent);
+      word-break: break-all;
+      margin-top: 6px;
+    }
+
+    .evidence-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    /* Footer */
+    .footer {
+      height: 38px;
+      border-top: 1px solid var(--card-border);
+      background: var(--sidebar);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 11px;
+      color: var(--fg-muted);
+    }
+  </style>
+</head>
+<body data-theme="night">
+  <div class="bloom-orb orb-1"></div>
+  <div class="bloom-orb orb-2"></div>
+
+  <!-- Main Window -->
+  <div class="app-window">
+    <!-- Window Titlebar -->
+    <div class="titlebar">
+      <div class="window-controls">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-amber"></div>
+        <div class="dot dot-green"></div>
+      </div>
+      <div>FileSorter 5.0 • Aurora Glass Edition</div>
+      <div>Engine v8</div>
+    </div>
+
+    <!-- Window Body -->
+    <div class="window-body">
+      <!-- Left Sidebar -->
+      <aside class="sidebar">
+        <div>
+          <div class="brand">
+            <div class="brand-icon">FS</div>
+            <div class="brand-text">
+              <h2>FileSorter 5.0</h2>
+              <p>Organize beautifully.</p>
+            </div>
+          </div>
+
+          <div class="nav-item active" onclick="setMode('sort')">
+            <span>Sort Files</span>
+            <span style="font-size: 11px; opacity: 0.8;">21</span>
+          </div>
+          <div class="nav-item" onclick="setMode('search')">
+            <span>Content Search</span>
+          </div>
+          <div class="nav-item" onclick="setMode('duplicates')">
+            <span>Smart Cleanup</span>
+          </div>
+          <div class="nav-item" onclick="setMode('rules')">
+            <span>Custom Rules</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="storage-card">
+            <div style="display: flex; justify-content: space-between; font-weight: 600;">
+              <span>Storage Used</span>
+              <span>128 / 500 GB</span>
+            </div>
+            <div class="storage-bar">
+              <div class="storage-progress"></div>
+            </div>
+            <p style="font-size: 10px; color: var(--fg-muted);">Soft aurora engine active</p>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-top: 14px;">
+            <button class="btn-secondary" onclick="cycleTheme()" style="padding: 6px 12px; font-size: 11px;">
+              Theme Switch
+            </button>
+            <button class="btn-gradient" onclick="runPreview()" style="padding: 6px 14px; font-size: 11px;">
+              ⚡ Quick Run
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Canvas -->
+      <main class="main-canvas">
+        <!-- Header Toolbar -->
+        <div class="toolbar">
+          <div>
+            <h1 style="font-size: 18px; font-weight: 700; color: var(--fg);">All Files</h1>
+            <p style="font-size: 11px; color: var(--fg-muted);">21 files • Content-aware classification active</p>
+          </div>
+
+          <div class="segmented-pill">
+            <button class="pill-btn active" id="btn-sort" onclick="setMode('sort')">Sort</button>
+            <button class="pill-btn" id="btn-search" onclick="setMode('search')">Search</button>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <input type="text" class="search-input" id="search-box" placeholder="Search files and folders..." oninput="filterFiles()">
+            <button class="btn-secondary" onclick="toggleInspector()">
+              <span id="inspect-btn-text">Hide Info</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn-gradient" onclick="runPreview()">1. Run Preview</button>
+            <button class="btn-secondary" style="background: var(--ok); color: #fff; border-color: var(--ok);" onclick="runSort()">2. Sort Selected</button>
+            <button class="btn-secondary" onclick="toggleSelectAll()">Select All</button>
+          </div>
+          <div style="font-size: 11px; color: var(--fg-muted);" id="status-text">
+            Ready • All files classified with verified confidence
+          </div>
+        </div>
+
+        <!-- Content Area: Files + Collapsible Side Inspector -->
+        <div class="content-area">
+          <!-- File List -->
+          <div class="file-list" id="files-container">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- The User's Core Request: Collapsible Side Info & Inspector Pane -->
+          <aside class="inspector" id="side-inspector">
+            <div>
+              <div class="inspector-header">
+                <span style="font-weight: 700; font-size: 12px;">File Details & Evidence</span>
+                <span style="cursor: pointer; opacity: 0.7;" onclick="toggleInspector()">✕</span>
+              </div>
+
+              <div class="inspector-card">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <div class="badge-icon badge-pdf" id="ins-badge">PDF</div>
+                  <div>
+                    <h3 id="ins-name" style="font-size: 13px; font-weight: 700;">Research Paper.pdf</h3>
+                    <p id="ins-size" style="font-size: 11px; color: var(--fg-muted);">2.4 MB • Document</p>
+                  </div>
+                </div>
+
+                <div style="margin-top: 10px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                    <span>Confidence:</span>
+                    <strong style="color: var(--ok);" id="ins-conf">98% Sure</strong>
+                  </div>
+                  <div class="storage-bar">
+                    <div class="storage-progress" id="ins-bar" style="width: 98%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--fg-muted);">ORGANIZED DESTINATION</span>
+                <div class="path-box" id="ins-path">
+                  Documents/Academic & Research/Research Paper.pdf
+                </div>
+              </div>
+
+              <div>
+                <span style="font-size: 11px; font-weight: 700; color: var(--fg-muted);">WHY IT WAS CLASSIFIED HERE</span>
+                <div class="inspector-card" style="margin-top: 6px;" id="ins-evidence">
+                  <div class="evidence-item">• %PDF-1.7 verified magic header</div>
+                  <div class="evidence-item">• Keywords: abstract, methodology, bibliography</div>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-secondary" style="width: 100%; padding: 10px;" onclick="alert('File marked for inclusion in next sort run.')">
+              Include In Next Sort
+            </button>
+          </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+          <div>
+            <strong>FileSorter 5.0</strong> • Aurora Glass System • Zero junk "Others"
+          </div>
+          <div>
+            Tip: Press <strong>Ctrl+I</strong> to toggle the Side Inspector.
+          </div>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const sampleItems = [
+      { id: 1, name: "Project Aurora", size: "142 MB", date: "Today 9:41 AM", type: "folder", badgeClass: "badge-folder", badgeText: "DIR", category: "Projects/Website Redesign", conf: "99% Sure", evidence: ["Git repository manifest detected", "Contains design assets and module trees"] },
+      { id: 2, name: "Research Paper.pdf", size: "2.4 MB", date: "May 19, 2025", type: "pdf", badgeClass: "badge-pdf", badgeText: "PDF", category: "Documents/Academic & Research", conf: "98% Sure", evidence: ["%PDF-1.7 verified header", "Keywords: abstract, methodology, bibliography"] },
+      { id: 3, name: "Dashboard Screenshot.png", size: "1.1 MB", date: "May 18, 2025", type: "image", badgeClass: "badge-img", badgeText: "PNG", category: "Images/Screenshots", conf: "99% Sure", evidence: ["PNG lossless signature bytes 89 50 4E 47", "Dimension 2560x1440 sRGB"] },
+      { id: 4, name: "Meeting Notes.docx", size: "856 KB", date: "May 17, 2025", type: "document", badgeClass: "badge-doc", badgeText: "DOCX", category: "Documents/Meeting Notes", conf: "96% Sure", evidence: ["DOCX OpenXML container verified", "Action items, attendee list, agenda detected"] },
+      { id: 5, name: "Design Assets.zip", size: "18.7 MB", date: "May 16, 2025", type: "archive", badgeClass: "badge-zip", badgeText: "ZIP", category: "Archives/Design Bundles", conf: "97% Sure", evidence: ["PK zip central directory verified", "Contains SVG icons and typography files"] },
+      { id: 6, name: "Brand Guidelines.pdf", size: "14.6 MB", date: "May 20, 2025", type: "pdf", badgeClass: "badge-pdf", badgeText: "PDF", category: "Documents/Branding", conf: "97% Sure", evidence: ["%PDF-1.6 vector graphics stream", "Keywords: color palette, logo usage, typography"] },
+      { id: 7, name: "Hero Concept.png", size: "27.0 MB", date: "May 19, 2025", type: "image", badgeClass: "badge-img", badgeText: "PNG", category: "Images/Concepts & Artwork", conf: "99% Sure", evidence: ["PNG 4K asset export", "Lossless RGBA color channels"] },
+      { id: 8, name: "sodium-fabric-mc1.20.4-0.5.8.jar", size: "1.4 MB", date: "May 15, 2025", type: "archive", badgeClass: "badge-zip", badgeText: "MOD", category: "Games/Minecraft/Mods/Fabric", conf: "98% Sure", evidence: ["fabric.mod.json descriptor detected: id=sodium", "Target environment Minecraft 1.20.4"] },
+      { id: 9, name: "iris-mc1.20.4-1.6.17.jar", size: "2.8 MB", date: "May 14, 2025", type: "archive", badgeClass: "badge-zip", badgeText: "MOD", category: "Games/Minecraft/Mods/Fabric", conf: "97% Sure", evidence: ["fabric.mod.json descriptor present", "Shaderpack loader architecture detected"] }
+    ];
+
+    let currentItem = sampleItems[1];
+    let inspectorOpen = true;
+    let selectedIds = new Set(sampleItems.map(i => i.id));
+    const themes = ["night", "cool", "warm"];
+    let themeIdx = 0;
+
+    function renderFiles(items = sampleItems) {
+      const container = document.getElementById("files-container");
+      container.innerHTML = "";
+      items.forEach(item => {
+        const isSelected = selectedIds.has(item.id);
+        const isActive = currentItem?.id === item.id;
+        const row = document.createElement("div");
+        row.className = `file-row ${isActive ? "active" : ""}`;
+        row.onclick = () => selectItem(item);
+
+        row.innerHTML = `
+          <div class="file-meta">
+            <input type="checkbox" ${isSelected ? "checked" : ""} onclick="event.stopPropagation(); toggleItem(${item.id});">
+            <div class="badge-icon ${item.badgeClass}">${item.badgeText}</div>
+            <div class="file-title">
+              <h4>${item.name}</h4>
+              <p>${item.size} • Modified ${item.date}</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span class="pill-tag">${item.category}</span>
+            <span class="pill-sure">${item.conf}</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function selectItem(item) {
+      currentItem = item;
+      document.getElementById("ins-name").innerText = item.name;
+      document.getElementById("ins-size").innerText = `${item.size} • ${item.category}`;
+      document.getElementById("ins-path").innerText = `${item.category}/${item.name}`;
+      document.getElementById("ins-conf").innerText = item.conf;
+      document.getElementById("ins-badge").className = `badge-icon ${item.badgeClass}`;
+      document.getElementById("ins-badge").innerText = item.badgeText;
+      
+      const evDiv = document.getElementById("ins-evidence");
+      evDiv.innerHTML = item.evidence.map(e => `<div class="evidence-item">• ${e}</div>`).join("");
+      renderFiles();
+    }
+
+    function toggleInspector() {
+      inspectorOpen = !inspectorOpen;
+      const el = document.getElementById("side-inspector");
+      const btnText = document.getElementById("inspect-btn-text");
+      if (inspectorOpen) {
+        el.classList.remove("closed");
+        btnText.innerText = "Hide Info";
+      } else {
+        el.classList.add("closed");
+        btnText.innerText = "Details";
+      }
+    }
+
+    function toggleItem(id) {
+      if (selectedIds.has(id)) selectedIds.delete(id);
+      else selectedIds.add(id);
+      renderFiles();
+    }
+
+    function toggleSelectAll() {
+      if (selectedIds.size === sampleItems.length) selectedIds.clear();
+      else selectedIds = new Set(sampleItems.map(i => i.id));
+      renderFiles();
+    }
+
+    function cycleTheme() {
+      themeIdx = (themeIdx + 1) % themes.length;
+      document.body.setAttribute("data-theme", themes[themeIdx]);
+    }
+
+    function filterFiles() {
+      const q = document.getElementById("search-box").value.toLowerCase();
+      const filtered = sampleItems.filter(i => i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q));
+      renderFiles(filtered);
+    }
+
+    function setMode(mode) {
+      document.getElementById("btn-sort").className = `pill-btn ${mode === 'sort' ? 'active' : ''}`;
+      document.getElementById("btn-search").className = `pill-btn ${mode === 'search' ? 'active' : ''}`;
+    }
+
+    function runPreview() {
+      const status = document.getElementById("status-text");
+      status.innerText = "Scanning signatures and matching taxonomy...";
+      setTimeout(() => {
+        status.innerText = "Ready • 21 items classified with 98% average confidence";
+        alert("Preview complete: All items classified successfully.");
+      }, 350);
+    }
+
+    function runSort() {
+      alert(`Success: ${selectedIds.size} file(s) organized according to verified confidence rules!`);
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "i") {
+        e.preventDefault();
+        toggleInspector();
+      }
+    });
+
+    renderFiles();
+  </script>
+</body>
+</html>
