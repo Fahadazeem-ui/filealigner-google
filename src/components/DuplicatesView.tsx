@@ -3,19 +3,15 @@ import { ThemeColors } from '../engine/themes';
 import { FileItem, DupGroup, DupItem } from '../types';
 import { findDuplicates, calculateWastedSpace } from '../engine/duplicates';
 import { formatBytes } from '../engine/sampleFiles';
+import { FileBadgeIcon } from './FileBadgeIcon';
 import { 
   CopyCheck, 
   Trash2, 
-  ShieldCheck, 
-  CheckCircle2, 
-  AlertTriangle, 
   CheckSquare, 
   Square,
   Sparkles,
-  HelpCircle,
-  HardDrive,
-  FileText,
-  FolderOpen
+  CheckCircle2,
+  HardDrive
 } from 'lucide-react';
 
 interface DuplicatesViewProps {
@@ -34,7 +30,6 @@ export const DuplicatesView: React.FC<DuplicatesViewProps> = ({
     return findDuplicates(items, true);
   });
 
-  // Re-calculate when items or options change
   React.useEffect(() => {
     setDuplicateGroups(findDuplicates(items, sameExtension));
   }, [items, sameExtension]);
@@ -82,212 +77,214 @@ export const DuplicatesView: React.FC<DuplicatesViewProps> = ({
       return prev.map(g => {
         return {
           ...g,
-          items: g.items.map((it, idx) => ({
-            ...it,
-            keep: idx === 0 // Highest version is ranked first
-          }))
+          items: g.items.map((it, idx) => ({ ...it, keep: idx === 0 }))
         };
       });
     });
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-hidden select-none">
-      {/* Top Smart Cleanup Header */}
+    <div className="flex flex-col h-full overflow-hidden select-none px-4 py-2">
+      {/* Top Banner Card */}
       <div 
-        className="px-6 py-4 border-b space-y-4 transition-colors duration-200"
-        style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder }}
+        className="p-4 rounded-3xl border glass-container shadow-md mb-3 flex flex-wrap items-center justify-between gap-4"
+        style={{
+          backgroundColor: theme.glassCard,
+          borderColor: theme.glassBorder,
+        }}
       >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
             <div 
-              className="w-10 h-10 rounded-2xl flex items-center justify-center shadow-md"
-              style={{
-                background: theme.accentGradient,
-                color: theme.accent_fg,
-                boxShadow: theme.accentGlow,
-              }}
+              className="w-8 h-8 rounded-xl flex items-center justify-center shadow-xs"
+              style={{ background: theme.accentGradient, color: theme.accent_fg }}
             >
-              <Sparkles className="w-5 h-5" />
+              <CopyCheck className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold tracking-tight" style={{ color: theme.fg }}>
-                Smart Duplicate Cleanup
-              </h2>
-              <p className="text-[11px]" style={{ color: theme.fg_muted }}>
-                Identifies duplicate versions, download copies (e.g. `(1)`, `copy`), and old installers.
-              </p>
-            </div>
+            <h2 className="text-sm font-bold tracking-tight" style={{ color: theme.fg }}>
+              Smart Duplicate Detection &amp; Cleanup
+            </h2>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleSelectOnlyHighestVersion}
-              className="px-4 py-2 rounded-2xl text-xs font-semibold border transition-all hover:scale-105 cursor-pointer"
-              style={{
-                backgroundColor: theme.buttonBg,
-                borderColor: theme.panelBorder,
-                color: theme.fg,
-              }}
-            >
-              Select Highest Versions
-            </button>
-
-            <button
-              onClick={handleApplyCleanup}
-              disabled={totalDuplicatesCount === 0}
-              className="px-5 py-2 rounded-2xl text-xs font-bold shadow-lg transition-all active:scale-95 cursor-pointer disabled:opacity-40"
-              style={{
-                background: theme.accentGradient,
-                color: theme.accent_fg,
-                boxShadow: theme.accentGlow,
-              }}
-            >
-              <Trash2 className="w-3.5 h-3.5 inline mr-1.5" />
-              Clean {totalDuplicatesCount} File(s) ({formatBytes(wastedSpace)})
-            </button>
-          </div>
+          <p className="text-xs max-w-xl opacity-75" style={{ color: theme.fg }}>
+            Identifies near-duplicates, copies, and versioned downloads (`file (1)`, `v1.2`, `copy`). Ranks by highest version number and modification time.
+          </p>
         </div>
 
-        {/* Space Recovery Meter Card */}
-        <div 
-          className="p-4 rounded-3xl border flex items-center justify-between gap-6"
-          style={{
-            backgroundColor: theme.cardBg,
-            borderColor: theme.cardBorder,
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <HardDrive className="w-8 h-8 opacity-70" style={{ color: theme.accent }} />
-            <div>
-              <div className="text-xs font-semibold" style={{ color: theme.fg }}>
-                Recoverable Disk Space
-              </div>
-              <div className="text-xl font-extrabold font-mono" style={{ color: theme.accent }}>
-                {formatBytes(wastedSpace)}
-              </div>
-            </div>
+        <div className="flex items-center gap-3">
+          <div 
+            className="px-4 py-2 rounded-full border text-xs shadow-inner flex items-center gap-2"
+            style={{ backgroundColor: theme.entry_bg, borderColor: theme.glassBorder }}
+          >
+            <HardDrive className="w-4 h-4 opacity-60" />
+            <span>Recoverable Space: </span>
+            <strong className="font-mono" style={{ color: theme.warn }}>
+              {formatBytes(wastedSpace)}
+            </strong>
+            <span className="opacity-60 font-mono">({totalDuplicatesCount} files)</span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
-            <label className="flex items-center gap-2 cursor-pointer font-medium" style={{ color: theme.fg }}>
-              <input
-                type="checkbox"
-                checked={sameExtension}
-                onChange={e => setSameExtension(e.target.checked)}
-                className="rounded accent-indigo-500"
-              />
-              <span>Match exact extension only</span>
-            </label>
-          </div>
+          <button
+            onClick={handleApplyCleanup}
+            disabled={totalDuplicatesCount === 0}
+            className="px-5 py-2 rounded-full text-xs font-bold flex items-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-40"
+            style={{
+              background: totalDuplicatesCount > 0 ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : theme.button,
+              boxShadow: totalDuplicatesCount > 0 ? '0 4px 16px rgba(239, 68, 68, 0.4)' : 'none',
+              color: '#ffffff',
+            }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clean Up {totalDuplicatesCount} Selected</span>
+          </button>
         </div>
       </div>
 
-      {/* Duplicate Groups Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+      {/* Sub toolbar */}
+      <div 
+        className="px-4 py-2 rounded-2xl border glass-container mb-3 flex items-center justify-between text-xs"
+        style={{
+          backgroundColor: theme.glassPanel,
+          borderColor: theme.glassBorder,
+          color: theme.fg_muted,
+        }}
+      >
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={sameExtension}
+            onChange={e => setSameExtension(e.target.checked)}
+            className="rounded accent-blue-600"
+          />
+          <span style={{ color: theme.fg }}>Require exact same file extension</span>
+        </label>
+
+        <button
+          onClick={handleSelectOnlyHighestVersion}
+          className="hover:underline flex items-center gap-1.5 font-semibold text-xs"
+          style={{ color: theme.accent }}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Keep Only Highest Version</span>
+        </button>
+      </div>
+
+      {/* Groups List */}
+      <div 
+        className="flex-1 overflow-y-auto rounded-3xl border glass-container shadow-xl p-4 space-y-3.5"
+        style={{
+          backgroundColor: theme.glassCard,
+          borderColor: theme.glassBorder,
+        }}
+      >
         {duplicateGroups.length === 0 ? (
-          <div className="py-24 text-center space-y-3">
-            <div 
-              className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center opacity-40 shadow-inner"
-              style={{ backgroundColor: theme.cardBg }}
-            >
-              <CheckCircle2 className="w-8 h-8" style={{ color: theme.ok }} />
-            </div>
-            <p className="text-sm font-semibold" style={{ color: theme.fg }}>
-              No duplicate or redundant versions detected!
-            </p>
-            <p className="text-xs" style={{ color: theme.fg_muted }}>
-              Your workspace folder is clean and optimized.
-            </p>
+          <div className="py-24 text-center opacity-60">
+            <CheckCircle2 className="w-12 h-12 mx-auto mb-2 opacity-50" style={{ color: theme.ok }} />
+            <p className="font-bold text-sm">No duplicate files detected in this folder</p>
+            <p className="text-xs mt-1">All files have unique stems and distinct versions.</p>
           </div>
         ) : (
-          duplicateGroups.map((group, groupIdx) => {
-            const olderItems = group.items.filter(i => !i.keep);
-
+          duplicateGroups.map((group, groupIndex) => {
             return (
-              <div 
+              <div
                 key={group.key}
-                className="rounded-3xl border overflow-hidden transition-all duration-200"
+                className="rounded-2xl border overflow-hidden shadow-xs"
                 style={{
-                  backgroundColor: theme.cardBg,
-                  borderColor: theme.cardBorder,
+                  backgroundColor: theme.glassPanel,
+                  borderColor: theme.glassBorder,
                 }}
               >
-                {/* Group Header */}
+                {/* Group Title Bar */}
                 <div 
-                  className="px-5 py-3 border-b flex items-center justify-between text-xs"
-                  style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder }}
+                  className="px-4 py-2 border-b flex items-center justify-between text-xs font-semibold"
+                  style={{
+                    backgroundColor: theme.glassPanel2,
+                    borderColor: theme.glassBorder,
+                    color: theme.fg,
+                  }}
                 >
-                  <div className="flex items-center gap-2 font-bold" style={{ color: theme.fg }}>
-                    <CopyCheck className="w-4 h-4" style={{ color: theme.accent }} />
-                    <span>Group: {group.key}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs px-2.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: theme.entry_bg }}>
+                      Stem: {group.key}
+                    </span>
+                    <span className="text-[11px] opacity-70">
+                      ({group.items.length} related candidates)
+                    </span>
                   </div>
-                  <span className="text-[11px] font-medium" style={{ color: theme.fg_muted }}>
-                    {group.items.length} versions found • {olderItems.length} marked for cleanup
+
+                  <span className="text-[11px] font-mono opacity-60">
+                    Group #{groupIndex + 1}
                   </span>
                 </div>
 
-                {/* Items in Group */}
-                <div className="p-3 space-y-2">
-                  {group.items.map((item, itemIdx) => {
-                    const isNewest = itemIdx === 0;
+                {/* Items in this group */}
+                <div className="divide-y" style={{ borderColor: theme.glassBorder }}>
+                  {group.items.map((it, itemIndex) => {
+                    const isKeeper = it.keep;
 
                     return (
                       <div
-                        key={item.id}
-                        onClick={() => toggleKeep(groupIdx, item.id)}
-                        className="p-3 rounded-2xl border flex items-center justify-between gap-4 transition-all cursor-pointer hover:scale-[1.005]"
-                        style={{
-                          backgroundColor: item.keep ? theme.cardBg : 'rgba(239, 68, 68, 0.08)',
-                          borderColor: item.keep ? theme.cardBorder : 'rgba(239, 68, 68, 0.25)',
-                        }}
+                        key={it.id}
+                        onClick={() => toggleKeep(groupIndex, it.id)}
+                        className={`px-4 py-2.5 flex items-center justify-between text-xs cursor-pointer transition-colors ${
+                          isKeeper ? 'bg-white/5 dark:bg-white/5 font-medium' : 'hover:brightness-105'
+                        }`}
+                        style={{ color: theme.fg }}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <button 
-                            className="cursor-pointer"
+                        <div className="flex items-center gap-3 min-w-0 pr-3">
+                          <button
                             onClick={e => {
                               e.stopPropagation();
-                              toggleKeep(groupIdx, item.id);
+                              toggleKeep(groupIndex, it.id);
                             }}
+                            className="hover:scale-110 transition-transform"
                           >
-                            {item.keep ? (
+                            {isKeeper ? (
                               <CheckSquare className="w-4 h-4" style={{ color: theme.ok }} />
                             ) : (
                               <Square className="w-4 h-4 opacity-40" />
                             )}
                           </button>
 
+                          <FileBadgeIcon name={it.name} category={it.category} size="md" />
+
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-xs tracking-tight truncate" style={{ color: theme.fg }}>
-                                {item.name}
-                              </span>
-                              {isNewest && (
+                              <span className="font-mono font-semibold truncate">{it.name}</span>
+                              {itemIndex === 0 && (
                                 <span 
-                                  className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase"
-                                  style={{
-                                    backgroundColor: 'rgba(52, 211, 153, 0.2)',
-                                    color: theme.ok,
-                                  }}
+                                  className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                                  style={{ backgroundColor: `${theme.ok}25`, color: theme.ok }}
                                 >
-                                  Recommended (Newest)
+                                  Recommended Keep
+                                </span>
+                              )}
+                              {!isKeeper && (
+                                <span 
+                                  className="text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold"
+                                  style={{ backgroundColor: `${theme.error}20`, color: theme.error }}
+                                >
+                                  Cleanup
                                 </span>
                               )}
                             </div>
-                            <div className="text-[11px] opacity-70 mt-0.5" style={{ color: theme.fg_muted }}>
-                              {formatBytes(item.size)} • Modified {new Date(item.mtime).toLocaleString()}
-                            </div>
+                            <div className="text-[10px] opacity-60 truncate mt-0.5 font-mono">{it.path}</div>
                           </div>
                         </div>
 
-                        <div className="shrink-0 text-right">
-                          <span 
-                            className="text-xs font-semibold"
-                            style={{ color: item.keep ? theme.ok : theme.unsure }}
-                          >
-                            {item.keep ? "Keep File" : "Delete / Clean"}
-                          </span>
+                        <div className="flex items-center gap-6 shrink-0 text-right">
+                          <div className="text-[11px] font-mono opacity-80">
+                            {formatBytes(it.size)}
+                          </div>
+                          <div className="text-[11px] opacity-60 w-24">
+                            {new Date(it.mtime).toLocaleDateString()}
+                          </div>
+                          <div className="w-16">
+                            <span 
+                              className={`text-[11px] font-bold ${isKeeper ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}
+                            >
+                              {isKeeper ? 'Keep' : 'Discard'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -298,19 +295,6 @@ export const DuplicatesView: React.FC<DuplicatesViewProps> = ({
           })
         )}
       </div>
-
-      {/* Footer */}
-      <footer 
-        className="px-6 py-2.5 border-t flex items-center justify-between text-xs"
-        style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder, color: theme.fg_muted }}
-      >
-        <span>
-          <strong style={{ color: theme.fg }}>{duplicateGroups.length}</strong> duplicate sets analyzed
-        </span>
-        <span className="text-[11px]">
-          Safety Guarantee: The newest / highest version is preserved automatically.
-        </span>
-      </footer>
     </div>
   );
 };

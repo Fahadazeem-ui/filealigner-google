@@ -1,51 +1,36 @@
-export interface BadgeTheme {
-  bg: string;
-  fg: string;
-  border: string;
-}
-
 export interface ThemeColors {
   label: string;
   name: string;
   key: 'aurora_night' | 'aurora_warm' | 'aurora_cool';
-  // Atmospheric Canvas
-  canvasBg: string;
-  canvasGradients: string;
-  bloomOrb1: string;
-  bloomOrb2: string;
-  bloomOrb3: string;
-  // Main Window Glass
-  windowBg: string;
-  windowBorder: string;
-  windowShadow: string;
-  windowHighlight: string;
-  // Sidebar & Panes
-  sidebarBg: string;
-  sidebarBorder: string;
-  panelBg: string;
-  panelBg2: string;
-  panelBorder: string;
-  cardBg: string;
-  cardBgHover: string;
-  cardBorder: string;
-  // Typography
+  // Background & Ambient
+  ambientGradient: string;
+  bloomColor1: string;
+  bloomColor2: string;
+  bloomColor3: string;
+  bg: string;
+  bg2: string;
   fg: string;
   fg_muted: string;
-  fg_subtle: string;
-  // Interactive Accents & Glowing Pills
+  // Glass Cards & Panels
+  glassCard: string;
+  glassPanel: string;
+  glassPanel2: string;
+  glassBorder: string;
+  glassShadow: string;
+  glassInnerGlow: string;
+  card: string;
+  panel: string;
+  panel2: string;
+  border: string;
+  // Interactive Elements
   accent: string;
   accentGradient: string;
   accent_fg: string;
   accentGlow: string;
-  pillActiveBg: string;
-  pillActiveFg: string;
-  pillActiveGlow: string;
-  buttonBg: string;
-  buttonBgHover: string;
-  entryBg: string;
-  entryBorder: string;
-  // Storage Bar Gradient
-  storageGradient: string;
+  button: string;
+  button_hover: string;
+  select: string;
+  entry_bg: string;
   // Status & Verdicts
   ok: string;          // Sure
   progress: string;
@@ -53,179 +38,120 @@ export interface ThemeColors {
   warn: string;        // Probably
   unsure: string;      // Unsure
   error: string;
-  // File Category Badges
-  badges: {
-    folder: BadgeTheme;
-    pdf: BadgeTheme;
-    image: BadgeTheme;
-    document: BadgeTheme;
-    archive: BadgeTheme;
-    code: BadgeTheme;
-    media: BadgeTheme;
-    other: BadgeTheme;
-  };
 }
 
 export const AURORA_NIGHT: ThemeColors = {
   label: "Aurora Night",
-  name: "Aurora Night (Midnight Slate & Indigo)",
+  name: "Aurora Night (Midnight Slate)",
   key: "aurora_night",
-  canvasBg: "#0b0f19",
-  canvasGradients: "radial-gradient(ellipse at 25% 20%, rgba(99, 102, 241, 0.22) 0%, transparent 60%), radial-gradient(ellipse at 75% 75%, rgba(139, 92, 246, 0.2) 0%, transparent 60%), radial-gradient(ellipse at 60% 30%, rgba(56, 189, 248, 0.15) 0%, transparent 50%), #0b0f19",
-  bloomOrb1: "rgba(129, 140, 248, 0.25)",
-  bloomOrb2: "rgba(167, 139, 250, 0.2)",
-  bloomOrb3: "rgba(56, 189, 248, 0.18)",
-  windowBg: "rgba(18, 23, 38, 0.72)",
-  windowBorder: "rgba(255, 255, 255, 0.12)",
-  windowShadow: "0 30px 90px -20px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.08)",
-  windowHighlight: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)",
-  sidebarBg: "rgba(14, 18, 30, 0.55)",
-  sidebarBorder: "rgba(255, 255, 255, 0.08)",
-  panelBg: "rgba(22, 28, 46, 0.65)",
-  panelBg2: "rgba(28, 35, 58, 0.55)",
-  panelBorder: "rgba(255, 255, 255, 0.09)",
-  cardBg: "rgba(30, 38, 64, 0.45)",
-  cardBgHover: "rgba(42, 53, 88, 0.6)",
-  cardBorder: "rgba(255, 255, 255, 0.08)",
-  fg: "#e8edf8",
-  fg_muted: "#94a3b8",
-  fg_subtle: "#64748b",
-  accent: "#818cf8",
-  accentGradient: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
+  ambientGradient: "radial-gradient(ellipse at 20% 20%, rgba(68, 77, 128, 0.45) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(35, 45, 80, 0.5) 0%, transparent 60%), radial-gradient(ellipse at 60% 30%, rgba(76, 52, 108, 0.35) 0%, transparent 50%), #0e121e",
+  bloomColor1: "rgba(107, 130, 196, 0.35)",
+  bloomColor2: "rgba(120, 85, 170, 0.3)",
+  bloomColor3: "rgba(60, 95, 140, 0.25)",
+  bg: "#0e121e",
+  bg2: "#161b29",
+  fg: "#e4eaf4",
+  fg_muted: "#8c97ad",
+  glassCard: "rgba(25, 30, 46, 0.78)",
+  glassPanel: "rgba(22, 26, 40, 0.72)",
+  glassPanel2: "rgba(32, 38, 58, 0.65)",
+  glassBorder: "rgba(255, 255, 255, 0.11)",
+  glassShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.65), 0 0 2px rgba(255, 255, 255, 0.08)",
+  glassInnerGlow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.12)",
+  card: "rgba(25, 30, 46, 0.78)",
+  panel: "rgba(22, 26, 40, 0.72)",
+  panel2: "rgba(32, 38, 58, 0.65)",
+  border: "rgba(255, 255, 255, 0.11)",
+  accent: "#6b82c4",
+  accentGradient: "linear-gradient(135deg, #6882c8 0%, #866bb8 100%)",
   accent_fg: "#ffffff",
-  accentGlow: "0 8px 24px -4px rgba(99, 102, 241, 0.5)",
-  pillActiveBg: "linear-gradient(135deg, rgba(129, 140, 248, 0.35) 0%, rgba(99, 102, 241, 0.25) 100%)",
-  pillActiveFg: "#ffffff",
-  pillActiveGlow: "0 4px 18px rgba(99, 102, 241, 0.45)",
-  buttonBg: "rgba(255, 255, 255, 0.07)",
-  buttonBgHover: "rgba(255, 255, 255, 0.14)",
-  entryBg: "rgba(13, 17, 28, 0.7)",
-  entryBorder: "rgba(255, 255, 255, 0.12)",
-  storageGradient: "linear-gradient(90deg, #818cf8 0%, #a78bfa 50%, #38bdf8 100%)",
-  ok: "#34d399",
-  progress: "#818cf8",
-  review: "#fbbf24",
-  warn: "#fb923c",
-  unsure: "#f87171",
-  error: "#ef4444",
-  badges: {
-    folder: { bg: "rgba(167, 139, 250, 0.18)", fg: "#c4b5fd", border: "rgba(167, 139, 250, 0.3)" },
-    pdf: { bg: "rgba(244, 63, 94, 0.18)", fg: "#fb7185", border: "rgba(244, 63, 94, 0.3)" },
-    image: { bg: "rgba(56, 189, 248, 0.18)", fg: "#7dd3fc", border: "rgba(56, 189, 248, 0.3)" },
-    document: { bg: "rgba(99, 102, 241, 0.18)", fg: "#a5b4fc", border: "rgba(99, 102, 241, 0.3)" },
-    archive: { bg: "rgba(192, 132, 252, 0.18)", fg: "#e9d5ff", border: "rgba(192, 132, 252, 0.3)" },
-    code: { bg: "rgba(52, 211, 153, 0.18)", fg: "#6ee7b7", border: "rgba(52, 211, 153, 0.3)" },
-    media: { bg: "rgba(251, 191, 36, 0.18)", fg: "#fde68a", border: "rgba(251, 191, 36, 0.3)" },
-    other: { bg: "rgba(148, 163, 184, 0.18)", fg: "#cbd5e1", border: "rgba(148, 163, 184, 0.3)" },
-  }
-};
-
-export const AURORA_COOL: ThemeColors = {
-  label: "Aurora Cool",
-  name: "Aurora Cool (Soft Mint, Sky & Lavender)",
-  key: "aurora_cool",
-  canvasBg: "#eef4f8",
-  canvasGradients: "radial-gradient(ellipse at 15% 15%, rgba(199, 210, 254, 0.7) 0%, transparent 60%), radial-gradient(ellipse at 85% 25%, rgba(167, 243, 208, 0.55) 0%, transparent 60%), radial-gradient(ellipse at 50% 85%, rgba(224, 231, 255, 0.6) 0%, transparent 60%), #eef4f8",
-  bloomOrb1: "rgba(165, 180, 252, 0.4)",
-  bloomOrb2: "rgba(110, 231, 183, 0.35)",
-  bloomOrb3: "rgba(196, 181, 253, 0.35)",
-  windowBg: "rgba(255, 255, 255, 0.72)",
-  windowBorder: "rgba(255, 255, 255, 0.85)",
-  windowShadow: "0 30px 80px -15px rgba(148, 163, 184, 0.45), 0 0 1px 1px rgba(255, 255, 255, 0.9)",
-  windowHighlight: "inset 0 1px 2px 0 rgba(255, 255, 255, 0.95)",
-  sidebarBg: "rgba(255, 255, 255, 0.5)",
-  sidebarBorder: "rgba(255, 255, 255, 0.7)",
-  panelBg: "rgba(255, 255, 255, 0.6)",
-  panelBg2: "rgba(241, 245, 253, 0.65)",
-  panelBorder: "rgba(226, 232, 240, 0.6)",
-  cardBg: "rgba(255, 255, 255, 0.75)",
-  cardBgHover: "rgba(255, 255, 255, 0.95)",
-  cardBorder: "rgba(255, 255, 255, 0.8)",
-  fg: "#1e293b",
-  fg_muted: "#64748b",
-  fg_subtle: "#94a3b8",
-  accent: "#6366f1",
-  accentGradient: "linear-gradient(135deg, #818cf8 0%, #6ee7b7 100%)",
-  accent_fg: "#ffffff",
-  accentGlow: "0 8px 24px -4px rgba(99, 102, 241, 0.35)",
-  pillActiveBg: "linear-gradient(135deg, rgba(199, 210, 254, 0.85) 0%, rgba(224, 231, 255, 0.95) 100%)",
-  pillActiveFg: "#4338ca",
-  pillActiveGlow: "0 4px 18px rgba(165, 180, 252, 0.4)",
-  buttonBg: "rgba(255, 255, 255, 0.8)",
-  buttonBgHover: "rgba(255, 255, 255, 0.98)",
-  entryBg: "rgba(255, 255, 255, 0.85)",
-  entryBorder: "rgba(203, 213, 225, 0.7)",
-  storageGradient: "linear-gradient(90deg, #818cf8 0%, #6ee7b7 100%)",
-  ok: "#10b981",
-  progress: "#6366f1",
-  review: "#f59e0b",
-  warn: "#f97316",
-  unsure: "#ef4444",
-  error: "#dc2626",
-  badges: {
-    folder: { bg: "rgba(196, 181, 253, 0.3)", fg: "#6d28d9", border: "rgba(196, 181, 253, 0.5)" },
-    pdf: { bg: "rgba(254, 205, 211, 0.4)", fg: "#e11d48", border: "rgba(254, 205, 211, 0.6)" },
-    image: { bg: "rgba(186, 230, 253, 0.4)", fg: "#0284c7", border: "rgba(186, 230, 253, 0.6)" },
-    document: { bg: "rgba(199, 210, 254, 0.4)", fg: "#4338ca", border: "rgba(199, 210, 254, 0.6)" },
-    archive: { bg: "rgba(233, 213, 255, 0.4)", fg: "#7e22ce", border: "rgba(233, 213, 255, 0.6)" },
-    code: { bg: "rgba(167, 243, 208, 0.4)", fg: "#047857", border: "rgba(167, 243, 208, 0.6)" },
-    media: { bg: "rgba(254, 240, 138, 0.4)", fg: "#b45309", border: "rgba(254, 240, 138, 0.6)" },
-    other: { bg: "rgba(226, 232, 240, 0.4)", fg: "#475569", border: "rgba(226, 232, 240, 0.6)" },
-  }
+  accentGlow: "0 6px 20px rgba(107, 130, 196, 0.45)",
+  button: "rgba(42, 50, 75, 0.7)",
+  button_hover: "rgba(55, 65, 96, 0.85)",
+  select: "rgba(107, 130, 196, 0.22)",
+  entry_bg: "rgba(17, 21, 33, 0.75)",
+  ok: "#5ec99b",
+  progress: "#6b82c4",
+  review: "#e2a958",
+  warn: "#e5b15d",
+  unsure: "#d96e6e",
+  error: "#e06868",
 };
 
 export const AURORA_WARM: ThemeColors = {
   label: "Aurora Warm",
-  name: "Aurora Warm (Blush Peach, Coral & Lilac)",
+  name: "Aurora Warm (Blush Peach & Lilac)",
   key: "aurora_warm",
-  canvasBg: "#fbf6f3",
-  canvasGradients: "radial-gradient(ellipse at 15% 15%, rgba(254, 205, 211, 0.7) 0%, transparent 60%), radial-gradient(ellipse at 85% 25%, rgba(254, 215, 170, 0.6) 0%, transparent 60%), radial-gradient(ellipse at 50% 85%, rgba(233, 213, 255, 0.55) 0%, transparent 60%), #fbf6f3",
-  bloomOrb1: "rgba(251, 146, 160, 0.4)",
-  bloomOrb2: "rgba(251, 191, 146, 0.35)",
-  bloomOrb3: "rgba(216, 180, 254, 0.35)",
-  windowBg: "rgba(255, 255, 255, 0.75)",
-  windowBorder: "rgba(255, 255, 255, 0.88)",
-  windowShadow: "0 30px 80px -15px rgba(244, 162, 176, 0.4), 0 0 1px 1px rgba(255, 255, 255, 0.95)",
-  windowHighlight: "inset 0 1px 2px 0 rgba(255, 255, 255, 0.95)",
-  sidebarBg: "rgba(255, 255, 255, 0.55)",
-  sidebarBorder: "rgba(255, 255, 255, 0.75)",
-  panelBg: "rgba(255, 255, 255, 0.62)",
-  panelBg2: "rgba(254, 247, 245, 0.7)",
-  panelBorder: "rgba(244, 226, 224, 0.7)",
-  cardBg: "rgba(255, 255, 255, 0.8)",
-  cardBgHover: "rgba(255, 255, 255, 0.98)",
-  cardBorder: "rgba(255, 255, 255, 0.85)",
-  fg: "#29201d",
-  fg_muted: "#786560",
-  fg_subtle: "#a8948f",
-  accent: "#fb7185",
-  accentGradient: "linear-gradient(135deg, #fda4af 0%, #fb7185 50%, #c084fc 100%)",
+  ambientGradient: "radial-gradient(ellipse at 15% 15%, rgba(255, 200, 190, 0.6) 0%, transparent 55%), radial-gradient(ellipse at 85% 25%, rgba(230, 195, 245, 0.55) 0%, transparent 60%), radial-gradient(ellipse at 50% 85%, rgba(200, 215, 255, 0.5) 0%, transparent 60%), #f8f1ec",
+  bloomColor1: "rgba(247, 157, 151, 0.45)",
+  bloomColor2: "rgba(228, 141, 165, 0.4)",
+  bloomColor3: "rgba(185, 175, 240, 0.35)",
+  bg: "#f7f1ec",
+  bg2: "#efe7e0",
+  fg: "#2e2520",
+  fg_muted: "#7c6f66",
+  glassCard: "rgba(255, 255, 255, 0.72)",
+  glassPanel: "rgba(255, 255, 255, 0.62)",
+  glassPanel2: "rgba(253, 246, 241, 0.78)",
+  glassBorder: "rgba(255, 255, 255, 0.75)",
+  glassShadow: "0 25px 55px -12px rgba(220, 170, 185, 0.38), 0 0 2px rgba(255, 255, 255, 0.9)",
+  glassInnerGlow: "inset 0 1px 2px 0 rgba(255, 255, 255, 0.9)",
+  card: "rgba(255, 255, 255, 0.72)",
+  panel: "rgba(255, 255, 255, 0.62)",
+  panel2: "rgba(253, 246, 241, 0.78)",
+  border: "rgba(255, 255, 255, 0.75)",
+  accent: "#f7928e",
+  accentGradient: "linear-gradient(135deg, #f79d97 0%, #e48da5 50%, #b392e2 100%)",
   accent_fg: "#ffffff",
-  accentGlow: "0 8px 24px -4px rgba(251, 113, 133, 0.4)",
-  pillActiveBg: "linear-gradient(135deg, #fecdd3 0%, #fed7aa 100%)",
-  pillActiveFg: "#9f1239",
-  pillActiveGlow: "0 4px 18px rgba(251, 113, 133, 0.35)",
-  buttonBg: "rgba(255, 255, 255, 0.85)",
-  buttonBgHover: "rgba(255, 255, 255, 0.98)",
-  entryBg: "rgba(255, 255, 255, 0.85)",
-  entryBorder: "rgba(244, 205, 200, 0.7)",
-  storageGradient: "linear-gradient(90deg, #fda4af 0%, #c084fc 100%)",
-  ok: "#059669",
-  progress: "#fb7185",
-  review: "#d97706",
-  warn: "#ea580c",
-  unsure: "#e11d48",
-  error: "#be123c",
-  badges: {
-    folder: { bg: "rgba(254, 205, 211, 0.35)", fg: "#be123c", border: "rgba(254, 205, 211, 0.6)" },
-    pdf: { bg: "rgba(254, 205, 211, 0.45)", fg: "#e11d48", border: "rgba(254, 205, 211, 0.7)" },
-    image: { bg: "rgba(199, 210, 254, 0.4)", fg: "#4f46e5", border: "rgba(199, 210, 254, 0.6)" },
-    document: { bg: "rgba(233, 213, 255, 0.4)", fg: "#7e22ce", border: "rgba(233, 213, 255, 0.6)" },
-    archive: { bg: "rgba(254, 215, 170, 0.45)", fg: "#c2410c", border: "rgba(254, 215, 170, 0.6)" },
-    code: { bg: "rgba(167, 243, 208, 0.4)", fg: "#047857", border: "rgba(167, 243, 208, 0.6)" },
-    media: { bg: "rgba(254, 240, 138, 0.45)", fg: "#b45309", border: "rgba(254, 240, 138, 0.6)" },
-    other: { bg: "rgba(231, 229, 228, 0.45)", fg: "#57534e", border: "rgba(231, 229, 228, 0.6)" },
-  }
+  accentGlow: "0 6px 20px rgba(247, 146, 142, 0.42)",
+  button: "rgba(255, 255, 255, 0.8)",
+  button_hover: "rgba(255, 255, 255, 0.95)",
+  select: "rgba(247, 157, 151, 0.22)",
+  entry_bg: "rgba(255, 255, 255, 0.75)",
+  ok: "#4fa876",
+  progress: "#f7928e",
+  review: "#d98f3b",
+  warn: "#d49742",
+  unsure: "#cf6666",
+  error: "#d95555",
+};
+
+export const AURORA_COOL: ThemeColors = {
+  label: "Aurora Cool",
+  name: "Aurora Cool (Mint & Periwinkle)",
+  key: "aurora_cool",
+  ambientGradient: "radial-gradient(ellipse at 20% 15%, rgba(195, 210, 255, 0.65) 0%, transparent 55%), radial-gradient(ellipse at 80% 25%, rgba(185, 240, 225, 0.55) 0%, transparent 60%), radial-gradient(ellipse at 50% 85%, rgba(220, 210, 250, 0.5) 0%, transparent 60%), #eef3f8",
+  bloomColor1: "rgba(107, 140, 220, 0.4)",
+  bloomColor2: "rgba(110, 210, 185, 0.35)",
+  bloomColor3: "rgba(165, 140, 225, 0.35)",
+  bg: "#eef3f8",
+  bg2: "#e4ecf4",
+  fg: "#222c38",
+  fg_muted: "#667485",
+  glassCard: "rgba(255, 255, 255, 0.75)",
+  glassPanel: "rgba(255, 255, 255, 0.65)",
+  glassPanel2: "rgba(240, 246, 252, 0.8)",
+  glassBorder: "rgba(255, 255, 255, 0.8)",
+  glassShadow: "0 25px 55px -12px rgba(160, 185, 215, 0.38), 0 0 2px rgba(255, 255, 255, 0.9)",
+  glassInnerGlow: "inset 0 1px 2px 0 rgba(255, 255, 255, 0.95)",
+  card: "rgba(255, 255, 255, 0.75)",
+  panel: "rgba(255, 255, 255, 0.65)",
+  panel2: "rgba(240, 246, 252, 0.8)",
+  border: "rgba(255, 255, 255, 0.8)",
+  accent: "#6b8cae",
+  accentGradient: "linear-gradient(135deg, #7496be 0%, #7db9ae 50%, #958dc7 100%)",
+  accent_fg: "#ffffff",
+  accentGlow: "0 6px 20px rgba(107, 140, 174, 0.4)",
+  button: "rgba(255, 255, 255, 0.85)",
+  button_hover: "rgba(255, 255, 255, 0.98)",
+  select: "rgba(107, 140, 174, 0.22)",
+  entry_bg: "rgba(255, 255, 255, 0.8)",
+  ok: "#45a37e",
+  progress: "#6b8cae",
+  review: "#bf8e3b",
+  warn: "#c4923e",
+  unsure: "#c76464",
+  error: "#cc5252",
 };
 
 export const THEMES: Record<string, ThemeColors> = {

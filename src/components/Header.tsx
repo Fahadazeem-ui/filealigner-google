@@ -3,198 +3,294 @@ import { ThemeColors } from '../engine/themes';
 import { 
   FolderSync, 
   Search, 
-  List, 
-  FolderTree, 
-  LayoutGrid, 
-  PanelRightClose, 
-  PanelRightOpen, 
-  SlidersHorizontal,
-  Plus,
-  Sparkles
+  CopyCheck, 
+  FileCheck2, 
+  Sliders, 
+  RotateCcw, 
+  Palette,
+  BookOpen,
+  LayoutList,
+  LayoutGrid,
+  PanelRightClose,
+  PanelRightOpen,
+  Sparkles,
+  MoreHorizontal
 } from 'lucide-react';
 
 export type AppMode = 'sort' | 'search' | 'duplicates' | 'audit' | 'rules';
-export type ViewMode = 'list' | 'tree' | 'grid';
 
 interface HeaderProps {
   mode: AppMode;
   setMode: (m: AppMode) => void;
   theme: ThemeColors;
-  themeKey: string;
-  setThemeKey: (t: 'aurora_cool' | 'aurora_warm' | 'aurora_night') => void;
+  themeKey: 'aurora_night' | 'aurora_warm' | 'aurora_cool';
+  setThemeKey: (t: 'aurora_night' | 'aurora_warm' | 'aurora_cool') => void;
   onOpenSettings: () => void;
   onOpenUndo: () => void;
   undoCount: number;
-  viewMode: ViewMode;
-  setViewMode: (v: ViewMode) => void;
+  viewLayout: 'list' | 'grid';
+  setViewLayout: (l: 'list' | 'grid') => void;
   showInspector: boolean;
-  setShowInspector: React.Dispatch<React.SetStateAction<boolean>>;
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  onNewFolder?: () => void;
+  setShowInspector: (show: boolean) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   mode,
   setMode,
   theme,
-  viewMode,
-  setViewMode,
+  themeKey,
+  setThemeKey,
+  onOpenSettings,
+  onOpenUndo,
+  undoCount,
+  viewLayout,
+  setViewLayout,
   showInspector,
   setShowInspector,
-  searchQuery,
-  setSearchQuery,
-  onNewFolder,
 }) => {
+  const nextTheme = () => {
+    if (themeKey === 'aurora_night') setThemeKey('aurora_warm');
+    else if (themeKey === 'aurora_warm') setThemeKey('aurora_cool');
+    else setThemeKey('aurora_night');
+  };
+
   return (
     <header 
-      className="px-6 py-4 flex items-center justify-between gap-4 border-b select-none transition-colors duration-300"
+      className="px-4 py-2.5 flex items-center justify-between gap-3 select-none transition-all duration-300 z-30"
       style={{
-        backgroundColor: theme.panelBg,
-        borderColor: theme.panelBorder,
         color: theme.fg,
       }}
     >
-      {/* Left: Section Title & Quick Info */}
+      {/* Brand & Left Navigation */}
       <div className="flex items-center gap-3">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight" style={{ color: theme.fg }}>
-            {mode === 'sort' && 'Sort & Preview'}
-            {mode === 'search' && 'Deep Content Search'}
-            {mode === 'duplicates' && 'Smart Duplicate Cleanup'}
-            {mode === 'audit' && 'Structure Audit'}
-            {mode === 'rules' && 'Custom Rules Engine'}
-          </h1>
-          <p className="text-[11px] font-medium" style={{ color: theme.fg_muted }}>
-            {mode === 'sort' && 'Automatic file classification with transparent evidence'}
-            {mode === 'search' && 'Find by underlying signatures, keywords, and true file types'}
-            {mode === 'duplicates' && 'Near-duplicate & versioned file detection'}
-            {mode === 'audit' && 'Verify and correct misfiled taxonomy documents'}
-            {mode === 'rules' && 'Define high-priority regex patterns and extensions'}
-          </p>
-        </div>
-      </div>
-
-      {/* Center: Signature Blooming Segmented Pill [ Sort | Search ] */}
-      <div 
-        className="p-1 rounded-full border flex items-center shadow-inner"
-        style={{
-          backgroundColor: theme.entryBg,
-          borderColor: theme.entryBorder,
-        }}
-      >
-        <button
-          onClick={() => setMode('sort')}
-          className="flex items-center gap-2 px-5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer"
-          style={{
-            background: mode === 'sort' ? theme.pillActiveBg : 'transparent',
-            color: mode === 'sort' ? theme.pillActiveFg : theme.fg_muted,
-            boxShadow: mode === 'sort' ? theme.pillActiveGlow : 'none',
-          }}
-        >
-          <FolderSync className="w-3.5 h-3.5" />
-          <span>Sort</span>
-        </button>
-
-        <button
-          onClick={() => setMode('search')}
-          className="flex items-center gap-2 px-5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer"
-          style={{
-            background: mode === 'search' ? theme.pillActiveBg : 'transparent',
-            color: mode === 'search' ? theme.pillActiveFg : theme.fg_muted,
-            boxShadow: mode === 'search' ? theme.pillActiveGlow : 'none',
-          }}
-        >
-          <Search className="w-3.5 h-3.5" />
-          <span>Search</span>
-        </button>
-      </div>
-
-      {/* Right: Quick Search, View Mode Toggles, and Inspector Drawer Switch */}
-      <div className="flex items-center gap-2.5">
-        {/* Soft Search Input Pill */}
-        <div className="relative flex items-center">
-          <Search className="w-3.5 h-3.5 absolute left-3.5 opacity-50" style={{ color: theme.fg }} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search files and folders..."
-            className="pl-9 pr-4 py-1.5 rounded-full text-xs font-medium border outline-none transition-all w-48 md:w-56 focus:w-64"
-            style={{
-              backgroundColor: theme.entryBg,
-              borderColor: theme.entryBorder,
-              color: theme.fg,
+        {/* Soft Brand Mark */}
+        <div className="flex items-center gap-2.5">
+          <div 
+            className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-md transition-transform hover:scale-105"
+            style={{ 
+              background: theme.accentGradient,
+              boxShadow: theme.accentGlow,
+              color: theme.accent_fg,
             }}
-          />
+          >
+            <FolderSync className="w-5 h-5 drop-shadow-xs" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-sm tracking-tight" style={{ color: theme.fg }}>
+                FileSorter
+              </span>
+              <span 
+                className="text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold"
+                style={{
+                  backgroundColor: `${theme.accent}25`,
+                  color: theme.accent,
+                }}
+              >
+                5.0
+              </span>
+            </div>
+            <p className="text-[10px] leading-none opacity-70" style={{ color: theme.fg_muted }}>
+              Soft Aurora Glass Engine
+            </p>
+          </div>
         </div>
 
-        {/* View Mode Switcher: List, Tree, Grid */}
+        {/* Soft Blooming Mode Pills */}
+        <nav 
+          className="flex items-center gap-1 p-1 rounded-full border glass-container shadow-xs ml-2"
+          style={{
+            backgroundColor: theme.glassPanel,
+            borderColor: theme.glassBorder,
+          }}
+        >
+          <button
+            onClick={() => setMode('sort')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              mode === 'sort' ? 'shadow-sm' : 'hover:opacity-90 opacity-75'
+            }`}
+            style={{
+              background: mode === 'sort' ? theme.accentGradient : 'transparent',
+              boxShadow: mode === 'sort' ? theme.accentGlow : 'none',
+              color: mode === 'sort' ? theme.accent_fg : theme.fg,
+            }}
+          >
+            <FolderSync className="w-3.5 h-3.5" />
+            Sort
+          </button>
+
+          <button
+            onClick={() => setMode('search')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              mode === 'search' ? 'shadow-sm' : 'hover:opacity-90 opacity-75'
+            }`}
+            style={{
+              background: mode === 'search' ? theme.accentGradient : 'transparent',
+              boxShadow: mode === 'search' ? theme.accentGlow : 'none',
+              color: mode === 'search' ? theme.accent_fg : theme.fg,
+            }}
+          >
+            <Search className="w-3.5 h-3.5" />
+            Search
+          </button>
+
+          <button
+            onClick={() => setMode('duplicates')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              mode === 'duplicates' ? 'shadow-sm' : 'hover:opacity-90 opacity-75'
+            }`}
+            style={{
+              background: mode === 'duplicates' ? theme.accentGradient : 'transparent',
+              boxShadow: mode === 'duplicates' ? theme.accentGlow : 'none',
+              color: mode === 'duplicates' ? theme.accent_fg : theme.fg,
+            }}
+          >
+            <CopyCheck className="w-3.5 h-3.5" />
+            Duplicates
+          </button>
+
+          <button
+            onClick={() => setMode('audit')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              mode === 'audit' ? 'shadow-sm' : 'hover:opacity-90 opacity-75'
+            }`}
+            style={{
+              background: mode === 'audit' ? theme.accentGradient : 'transparent',
+              boxShadow: mode === 'audit' ? theme.accentGlow : 'none',
+              color: mode === 'audit' ? theme.accent_fg : theme.fg,
+            }}
+          >
+            <FileCheck2 className="w-3.5 h-3.5" />
+            Audit
+          </button>
+
+          <button
+            onClick={() => setMode('rules')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+              mode === 'rules' ? 'shadow-sm' : 'hover:opacity-90 opacity-75'
+            }`}
+            style={{
+              background: mode === 'rules' ? theme.accentGradient : 'transparent',
+              boxShadow: mode === 'rules' ? theme.accentGlow : 'none',
+              color: mode === 'rules' ? theme.accent_fg : theme.fg,
+            }}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Rules
+          </button>
+        </nav>
+      </div>
+
+      {/* Right Controls: View Toggle, Side Info Toggle, Theme, Undo, Settings */}
+      <div className="flex items-center gap-2">
+        {/* Layout Switcher (List vs Grid) - matching screenshot #2 & #3 */}
         <div 
-          className="p-1 rounded-2xl border flex items-center gap-0.5"
+          className="flex items-center p-1 rounded-full border glass-container"
           style={{
-            backgroundColor: theme.buttonBg,
-            borderColor: theme.panelBorder,
+            backgroundColor: theme.glassPanel,
+            borderColor: theme.glassBorder,
           }}
         >
           <button
-            onClick={() => setViewMode('list')}
-            title="List View"
-            className="p-1.5 rounded-xl transition-all cursor-pointer"
+            onClick={() => setViewLayout('list')}
+            title="List view"
+            className={`p-1.5 rounded-full transition-all ${viewLayout === 'list' ? 'shadow-xs font-bold' : 'opacity-60 hover:opacity-100'}`}
             style={{
-              background: viewMode === 'list' ? theme.pillActiveBg : 'transparent',
-              color: viewMode === 'list' ? theme.pillActiveFg : theme.fg_muted,
+              backgroundColor: viewLayout === 'list' ? theme.select : 'transparent',
+              color: viewLayout === 'list' ? theme.accent : theme.fg,
             }}
           >
-            <List className="w-3.5 h-3.5" />
+            <LayoutList className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setViewMode('tree')}
-            title="Grouped Tree View"
-            className="p-1.5 rounded-xl transition-all cursor-pointer"
+            onClick={() => setViewLayout('grid')}
+            title="Grid card view"
+            className={`p-1.5 rounded-full transition-all ${viewLayout === 'grid' ? 'shadow-xs font-bold' : 'opacity-60 hover:opacity-100'}`}
             style={{
-              background: viewMode === 'tree' ? theme.pillActiveBg : 'transparent',
-              color: viewMode === 'tree' ? theme.pillActiveFg : theme.fg_muted,
-            }}
-          >
-            <FolderTree className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            title="Grid Cards View"
-            className="p-1.5 rounded-xl transition-all cursor-pointer"
-            style={{
-              background: viewMode === 'grid' ? theme.pillActiveBg : 'transparent',
-              color: viewMode === 'grid' ? theme.pillActiveFg : theme.fg_muted,
+              backgroundColor: viewLayout === 'grid' ? theme.select : 'transparent',
+              color: viewLayout === 'grid' ? theme.accent : theme.fg,
             }}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* User's Core Request: Collapsible Side Info / Inspector Pane Toggle */}
+        {/* Toggle Side Info Panel (Requested specifically by user!) */}
         <button
-          onClick={() => setShowInspector(prev => !prev)}
-          title={showInspector ? "Hide Details & Path Panel (Toggle swipe)" : "Show Details & Path Panel"}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl border text-xs font-semibold transition-all duration-200 cursor-pointer hover:scale-105"
+          onClick={() => setShowInspector(!showInspector)}
+          title={showInspector ? "Hide side info panel (expand file workspace)" : "Show side info panel & evidence"}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border glass-container transition-all ${
+            showInspector ? 'shadow-xs' : 'opacity-70 hover:opacity-100'
+          }`}
           style={{
-            background: showInspector ? theme.pillActiveBg : theme.buttonBg,
-            borderColor: theme.panelBorder,
-            color: showInspector ? theme.pillActiveFg : theme.fg,
-            boxShadow: showInspector ? theme.pillActiveGlow : 'none',
+            backgroundColor: showInspector ? theme.select : theme.glassPanel,
+            borderColor: theme.glassBorder,
+            color: showInspector ? theme.accent : theme.fg,
           }}
         >
           {showInspector ? (
-            <>
-              <PanelRightClose className="w-4 h-4" />
-              <span className="hidden sm:inline">Hide Info</span>
-            </>
+            <PanelRightClose className="w-3.5 h-3.5" />
           ) : (
-            <>
-              <PanelRightOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Details</span>
-            </>
+            <PanelRightOpen className="w-3.5 h-3.5" />
           )}
+          <span className="hidden md:inline text-[11px]">
+            {showInspector ? "Hide Info" : "Side Info"}
+          </span>
+        </button>
+
+        {/* Theme Quick Switcher (Soft Blooming Palette indicator) */}
+        <button
+          onClick={nextTheme}
+          title={`Theme: ${theme.name}. Click to switch theme.`}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border glass-container transition-all hover:scale-102"
+          style={{
+            backgroundColor: theme.glassPanel,
+            borderColor: theme.glassBorder,
+            color: theme.fg,
+          }}
+        >
+          <div 
+            className="w-3 h-3 rounded-full shadow-xs animate-pulse"
+            style={{ background: theme.accentGradient }}
+          />
+          <span className="hidden sm:inline font-semibold text-[11px]">{theme.label}</span>
+        </button>
+
+        {/* Undo Journal */}
+        <button
+          onClick={onOpenUndo}
+          title="Undo Journal & Revert history"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border glass-container transition-all hover:scale-102 relative"
+          style={{
+            backgroundColor: theme.glassPanel,
+            borderColor: theme.glassBorder,
+            color: theme.fg,
+          }}
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline text-[11px]">Undo</span>
+          {undoCount > 0 && (
+            <span 
+              className="w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white"
+              style={{ background: theme.accentGradient }}
+            >
+              {undoCount}
+            </span>
+          )}
+        </button>
+
+        {/* Settings */}
+        <button
+          onClick={onOpenSettings}
+          title="App Settings"
+          className="p-1.5 rounded-full border glass-container transition-all hover:scale-105"
+          style={{
+            backgroundColor: theme.glassPanel,
+            borderColor: theme.glassBorder,
+            color: theme.fg,
+          }}
+        >
+          <Sliders className="w-4 h-4" />
         </button>
       </div>
     </header>

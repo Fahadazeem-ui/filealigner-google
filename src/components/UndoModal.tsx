@@ -1,7 +1,7 @@
 import React from 'react';
 import { ThemeColors } from '../engine/themes';
 import { JournalRecord } from '../types';
-import { RotateCcw, X, CheckCircle2, History, AlertCircle, ArrowRight } from 'lucide-react';
+import { RotateCcw, X, History } from 'lucide-react';
 
 interface UndoModalProps {
   isOpen: boolean;
@@ -21,76 +21,62 @@ export const UndoModal: React.FC<UndoModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 select-none animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-2xl rounded-3xl border shadow-2xl flex flex-col max-h-[80vh] overflow-hidden glass-panel"
+        className="w-full max-w-2xl rounded-3xl border glass-container shadow-2xl flex flex-col max-h-[80vh] overflow-hidden"
         style={{
-          backgroundColor: theme.windowBg,
-          borderColor: theme.windowBorder,
+          backgroundColor: theme.glassCard,
+          borderColor: theme.glassBorder,
           color: theme.fg,
-          boxShadow: theme.windowShadow,
         }}
       >
         {/* Header */}
         <div 
           className="px-6 py-4 border-b flex items-center justify-between"
-          style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder }}
+          style={{ backgroundColor: theme.glassPanel2, borderColor: theme.glassBorder }}
         >
           <div className="flex items-center gap-2.5">
             <div 
-              className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+              className="w-7 h-7 rounded-xl flex items-center justify-center shadow-xs"
               style={{ background: theme.accentGradient, color: theme.accent_fg }}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5" />
             </div>
-            <div>
-              <h3 className="font-bold text-sm tracking-tight" style={{ color: theme.fg }}>
-                Undo Journal & Rollback History
-              </h3>
-              <p className="text-[11px]" style={{ color: theme.fg_muted }}>
-                Every sort action is recorded with zero data loss guarantee
-              </p>
-            </div>
+            <h3 className="font-bold text-sm tracking-tight">Undo Journal History</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl border opacity-70 hover:opacity-100 hover:scale-105 transition-all cursor-pointer"
-            style={{ backgroundColor: theme.buttonBg, borderColor: theme.panelBorder }}
+            className="p-1.5 rounded-full opacity-60 hover:opacity-100 transition-opacity"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-3 flex-1 text-xs" style={{ backgroundColor: theme.panelBg }}>
+        <div className="p-5 overflow-y-auto space-y-3.5 flex-1 text-xs">
           {journals.length === 0 ? (
-            <div className="py-20 text-center opacity-60 space-y-2">
-              <History className="w-10 h-10 mx-auto opacity-40" style={{ color: theme.accent }} />
-              <p className="font-bold text-xs" style={{ color: theme.fg }}>No sort journals on record.</p>
-              <p className="text-[11px]" style={{ color: theme.fg_muted }}>
-                When you execute "Sort Selected", instant undo rollback checkpoints are saved here.
-              </p>
+            <div className="py-20 text-center opacity-60">
+              <History className="w-12 h-12 mx-auto mb-2 opacity-40" />
+              <p className="font-bold text-sm">No sort journals on record</p>
+              <p className="text-[11px] mt-1">When you execute "Quick Organize" or "Sort Selected", undo checkpoints appear here.</p>
             </div>
           ) : (
             journals.map((j, idx) => (
               <div
                 key={j.id}
-                className="p-4 rounded-3xl border space-y-3 transition-all"
-                style={{ backgroundColor: theme.cardBg, borderColor: theme.cardBorder }}
+                className="p-4 rounded-2xl border space-y-2.5 transition-all shadow-xs"
+                style={{ backgroundColor: theme.glassPanel, borderColor: theme.glassBorder }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <span 
-                      className="px-2.5 py-0.5 rounded-full font-mono font-bold text-xs"
-                      style={{ backgroundColor: theme.pillActiveBg, color: theme.pillActiveFg }}
-                    >
+                    <span className="font-mono font-bold text-xs" style={{ color: theme.accent }}>
                       Run #{journals.length - idx}
                     </span>
-                    <span className="text-[11px] opacity-70" style={{ color: theme.fg_muted }}>
+                    <span className="text-[11px] opacity-60">
                       {new Date(j.timestamp).toLocaleString()}
                     </span>
                     {j.undone && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/25">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-green-500/20 text-green-500">
                         Restored
                       </span>
                     )}
@@ -99,34 +85,28 @@ export const UndoModal: React.FC<UndoModalProps> = ({
                   {!j.undone && (
                     <button
                       onClick={() => onRevertJournal(j.id)}
-                      className="px-4 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-transform active:scale-95 cursor-pointer text-white"
-                      style={{ backgroundColor: theme.warn }}
+                      className="px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm transition-transform active:scale-95"
+                      style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: '#ffffff' }}
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Restore Items</span>
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Revert / Restore</span>
                     </button>
                   )}
                 </div>
 
-                <div className="text-[11px]" style={{ color: theme.fg_muted }}>
-                  <span>Scope Root: </span>
-                  <span className="font-mono font-semibold" style={{ color: theme.fg }}>{j.scope}</span>
+                <div className="text-[11px] opacity-80">
+                  <span className="opacity-60">Scope: </span>
+                  <span className="font-mono font-semibold">{j.scope}</span>
                 </div>
 
-                {/* Moved files preview */}
-                <div 
-                  className="p-3 rounded-2xl border font-mono text-[10px] space-y-1.5 max-h-28 overflow-y-auto"
-                  style={{ backgroundColor: theme.entryBg, borderColor: theme.entryBorder }}
-                >
+                <div className="p-2.5 rounded-xl font-mono text-[10px] space-y-1 max-h-28 overflow-y-auto border" style={{ backgroundColor: theme.entry_bg, borderColor: theme.glassBorder }}>
                   {j.moved.slice(0, 5).map(([src, dst], i) => (
-                    <div key={i} className="truncate flex items-center gap-1.5">
-                      <span className="opacity-50">{src}</span>
-                      <ArrowRight className="w-3 h-3 shrink-0 opacity-50" />
-                      <span style={{ color: theme.accent }}>{dst}</span>
+                    <div key={i} className="truncate">
+                      <span className="opacity-50">{src}</span> → <span style={{ color: theme.accent }}>{dst}</span>
                     </div>
                   ))}
                   {j.moved.length > 5 && (
-                    <div className="opacity-50 italic pt-1">
+                    <div className="opacity-50 italic">
                       + {j.moved.length - 5} more files moved in this operation
                     </div>
                   )}
@@ -139,12 +119,12 @@ export const UndoModal: React.FC<UndoModalProps> = ({
         {/* Footer */}
         <div 
           className="px-6 py-3 border-t flex justify-end"
-          style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder }}
+          style={{ backgroundColor: theme.glassPanel2, borderColor: theme.glassBorder }}
         >
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-2xl text-xs font-semibold border cursor-pointer hover:scale-105 transition-all"
-            style={{ backgroundColor: theme.buttonBg, borderColor: theme.panelBorder, color: theme.fg }}
+            className="px-4 py-1.5 rounded-full text-xs font-semibold border"
+            style={{ backgroundColor: theme.button, borderColor: theme.glassBorder, color: theme.fg }}
           >
             Close
           </button>

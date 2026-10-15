@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Header, AppMode, ViewMode } from './components/Header';
-import { Sidebar } from './components/Sidebar';
+import { Header, AppMode } from './components/Header';
 import { SortView } from './components/SortView';
 import { SearchView } from './components/SearchView';
 import { DuplicatesView } from './components/DuplicatesView';
 import { RulesView } from './components/RulesView';
 import { SettingsModal } from './components/SettingsModal';
 import { UndoModal } from './components/UndoModal';
-import { getTheme } from './engine/themes';
+import { getTheme, THEMES } from './engine/themes';
 import { loadSettings, saveSettings, loadUserRules, saveUserRules } from './engine/settings';
 import { loadJournals, saveJournal, markJournalUndone } from './engine/journal';
-import { generateSampleFiles, formatBytes } from './engine/sampleFiles';
+import { generateSampleFiles } from './engine/sampleFiles';
 import { classifyItem } from './engine/classifier';
 import { FileItem, JournalRecord, AppSettings, UserCustomRule } from './types';
-import { Sparkles, Minus, Square, X } from 'lucide-react';
+import { Sparkles, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
@@ -24,10 +23,9 @@ export const App: React.FC = () => {
   const [scopePath, setScopePath] = useState<string>('C:/Users/User/Downloads');
   const [destPath, setDestPath] = useState<string>('');
   
-  // View mode and Inspector panel state (User's core request: toggle swipe / show-hide info pane)
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [showInspector, setShowInspector] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  // Detailing options: List vs Grid view & Toggleable Side Info Inspector
+  const [viewLayout, setViewLayout] = useState<'list' | 'grid'>('list');
+  const [showInspector, setShowInspector] = useState(true);
 
   // Modals
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -41,61 +39,36 @@ export const App: React.FC = () => {
 
   const theme = getTheme(settings.appearance.theme);
 
-  // Save rules when changed
   useEffect(() => {
     saveUserRules(userRules);
   }, [userRules]);
 
-  // Global Keyboard Shortcuts (Ctrl+I to toggle inspector, Esc to close)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i') {
-        e.preventDefault();
-        setShowInspector(prev => !prev);
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === '1') {
-        e.preventDefault();
-        setMode('sort');
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === '2') {
-        e.preventDefault();
-        setMode('search');
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === '3') {
-        e.preventDefault();
-        setMode('duplicates');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   const handleSaveSettings = (newSettings: AppSettings) => {
     setSettings(newSettings);
     saveSettings(newSettings);
-    showToast("Preferences updated.");
+    showToast("Settings updated successfully.");
   };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
-    }, 3500);
+    }, 3800);
   };
 
   // Preview runner
   const handlePreview = async (sortMode: 'sort' | 'audit' = 'sort') => {
     setIsLoading(true);
     setProgressPercent(0);
-    setProgressStage('Scanning directory manifests...');
+    setProgressStage('Scanning directory entries...');
 
     await new Promise(r => setTimeout(r, 120));
     setProgressPercent(35);
-    setProgressStage('Inspecting magic bytes & MIME containers...');
+    setProgressStage('Sniffing byte signatures & containers...');
 
     await new Promise(r => setTimeout(r, 150));
     setProgressPercent(70);
-    setProgressStage('Evaluating custom rules & document taxonomy...');
+    setProgressStage('Analyzing document keywords & rules...');
 
     const updated: FileItem[] = [];
     for (const it of items) {
@@ -120,12 +93,12 @@ export const App: React.FC = () => {
       });
     }
 
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise(r => setTimeout(r, 120));
     setProgressPercent(100);
-    setProgressStage('Ready');
+    setProgressStage('Complete');
     setIsLoading(false);
     setItems(updated);
-    showToast(`Classification complete for ${updated.length} items.`);
+    showToast(`Preview analyzed ${updated.length} items with evidence.`);
   };
 
   // Sort executor
@@ -135,7 +108,7 @@ export const App: React.FC = () => {
     const count = selectedItems.length;
     const confirmType = settings.interaction.confirm_sort;
     if (confirmType === 'always' || (confirmType === 'many' && count > 50)) {
-      if (!confirm(`Are you sure you want to sort and move ${count} selected item(s)?`)) {
+      if (!confirm(`Are you sure you want to organize and move ${count} selected item(s)?`)) {
         return;
       }
     }
@@ -172,19 +145,19 @@ export const App: React.FC = () => {
       return it;
     }));
 
-    showToast(`Successfully organized ${count} file(s)! Checkpoint recorded in Undo Journal.`);
+    showToast(`Successfully organized ${count} item(s)! Revert available anytime in Undo.`);
   };
 
   // Undo execution
   const handleUndoLast = () => {
     if (journals.length === 0) {
-      showToast("No sort journal records found to undo.");
+      showToast("Nothing to undo — no sort journals found.");
       return;
     }
 
     const latest = journals.find(j => !j.undone) || journals[0];
     if (settings.interaction.confirm_undo) {
-      if (!confirm(`Rollback ${latest.moved.length} item(s) from sort run at ${new Date(latest.timestamp).toLocaleTimeString()}?`)) {
+      if (!confirm(`Restore ${latest.moved.length} item(s) from sort run at ${new Date(latest.timestamp).toLocaleTimeString()}?`)) {
         return;
       }
     }
@@ -203,7 +176,7 @@ export const App: React.FC = () => {
 
     markJournalUndone(latest.id);
     setJournals(loadJournals());
-    showToast(`Rolled back ${latest.moved.length} item(s) to original location.`);
+    showToast(`Reverted run: ${latest.moved.length} item(s) restored.`);
   };
 
   const handleRevertJournal = (journalId: string) => {
@@ -224,10 +197,10 @@ export const App: React.FC = () => {
 
     markJournalUndone(journal.id);
     setJournals(loadJournals());
-    showToast(`Restored journal run (${journal.moved.length} files).`);
+    showToast(`Journal run restored (${journal.moved.length} items).`);
   };
 
-  // Preset loader
+  // Load presets
   const handleLoadPreset = (presetName: string) => {
     const samples = generateSampleFiles();
     if (presetName === 'minecraft') {
@@ -246,7 +219,7 @@ export const App: React.FC = () => {
     showToast(`Loaded ${presetName} preset.`);
   };
 
-  // User upload files
+  // Upload custom files
   const handleUploadFiles = async (files: FileList) => {
     const list: FileItem[] = [];
     for (let i = 0; i < files.length; i++) {
@@ -266,7 +239,7 @@ export const App: React.FC = () => {
           dest: ['Review', 'Unidentified'],
           label: f.name,
           confidence: 0.5,
-          evidence: ['Imported via file picker'],
+          evidence: ['Uploaded via file picker'],
           level: 'Probably',
           path: 'Review/Unidentified',
         }
@@ -275,8 +248,8 @@ export const App: React.FC = () => {
 
     if (list.length > 0) {
       setItems(list);
-      setScopePath((files[0] as any).webkitRelativePath ? 'Imported Directory' : 'Imported Files');
-      showToast(`Imported ${list.length} files. Starting preview...`);
+      setScopePath((files[0] as any).webkitRelativePath ? 'Uploaded Folder' : 'Uploaded Files');
+      showToast(`Loaded ${list.length} user files. Running preview...`);
       setTimeout(() => {
         handlePreview('sort');
       }, 100);
@@ -286,218 +259,149 @@ export const App: React.FC = () => {
   const handleRemoveDuplicates = (deleteIds: string[]) => {
     const delSet = new Set(deleteIds);
     setItems(prev => prev.filter(it => !delSet.has(it.id)));
-    showToast(`Cleaned ${deleteIds.length} duplicate file(s).`);
+    showToast(`Cleaned up ${deleteIds.length} duplicate file(s).`);
   };
 
-  const totalSizeFormatted = formatBytes(items.reduce((acc, i) => acc + i.size, 0));
-
-  // GUI scale
   const scalePct = settings.appearance.gui_scale || 100;
   const zoomFactor = scalePct / 100;
 
   return (
     <div 
-      className="relative flex items-center justify-center min-h-screen w-screen p-3 md:p-6 lg:p-8 overflow-hidden select-none"
+      className="flex flex-col h-screen w-screen overflow-hidden text-sm relative transition-colors duration-500"
       style={{
-        background: theme.canvasGradients,
-        backgroundColor: theme.canvasBg,
+        background: theme.ambientGradient,
         color: theme.fg,
         zoom: zoomFactor !== 1 ? zoomFactor : undefined,
       }}
     >
-      {/* Background Animated Blooming Ambient Orbs */}
-      <div 
-        className="absolute top-[-10%] left-[10%] w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none animate-bloom-1"
-        style={{ backgroundColor: theme.bloomOrb1 }}
-      />
-      <div 
-        className="absolute bottom-[-10%] right-[10%] w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none animate-bloom-2"
-        style={{ backgroundColor: theme.bloomOrb2 }}
-      />
-      <div 
-        className="absolute top-[40%] right-[30%] w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none animate-bloom-1"
-        style={{ backgroundColor: theme.bloomOrb3 }}
-      />
+      {/* Soft Ambient Blooming Orbs in the Background (Matching Screenshots!) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div 
+          className="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-3xl opacity-70 animate-aurora"
+          style={{ background: theme.bloomColor1 }}
+        />
+        <div 
+          className="absolute -top-20 right-1/4 w-[32rem] h-[32rem] rounded-full blur-3xl opacity-60 animate-aurora"
+          style={{ background: theme.bloomColor2, animationDelay: '-4s' }}
+        />
+        <div 
+          className="absolute -bottom-32 right-10 w-[36rem] h-[36rem] rounded-full blur-3xl opacity-60 animate-aurora"
+          style={{ background: theme.bloomColor3, animationDelay: '-8s' }}
+        />
+      </div>
 
-      {/* Toast Notification */}
+      {/* Toast Notification with Soft Glow */}
       {toastMessage && (
         <div 
-          className="fixed bottom-8 right-8 z-50 px-5 py-3 rounded-2xl shadow-2xl border text-xs font-semibold flex items-center gap-2.5 glass-panel animate-bounce"
+          className="fixed bottom-12 right-12 z-50 px-5 py-2.5 rounded-full shadow-2xl border text-xs font-semibold flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-200 glass-container"
           style={{
-            backgroundColor: theme.panelBg,
+            backgroundColor: theme.glassCard,
             borderColor: theme.accent,
-            color: theme.fg,
             boxShadow: theme.accentGlow,
+            color: theme.fg,
           }}
         >
-          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.accent }} />
+          <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: theme.accentGradient }} />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* ========================================================
-          THE FLOATING FROSTED GLASS DESKTOP WINDOW CONTAINER
-          (Exact replica of the mockups with rounded corners & glow)
-          ======================================================== */}
-      <div 
-        className="relative z-10 w-full max-w-[1520px] h-[92vh] rounded-[32px] border flex flex-col overflow-hidden glass-panel"
-        style={{
-          backgroundColor: theme.windowBg,
-          borderColor: theme.windowBorder,
-          boxShadow: theme.windowShadow,
+      {/* Main Top Header Navigation */}
+      <Header
+        mode={mode}
+        setMode={setMode}
+        theme={theme}
+        themeKey={settings.appearance.theme}
+        setThemeKey={k => {
+          const next = { ...settings, appearance: { ...settings.appearance, theme: k } };
+          setSettings(next);
+          saveSettings(next);
         }}
-      >
-        {/* Sleek Window Titlebar */}
-        <div 
-          className="h-9 px-5 border-b flex items-center justify-between shrink-0 select-none"
-          style={{
-            backgroundColor: theme.sidebarBg,
-            borderColor: theme.sidebarBorder,
-          }}
-        >
-          {/* macOS / Windows style window control dots */}
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-rose-500/80 hover:bg-rose-500 transition-colors cursor-pointer" />
-            <div className="w-3 h-3 rounded-full bg-amber-500/80 hover:bg-amber-500 transition-colors cursor-pointer" />
-            <div className="w-3 h-3 rounded-full bg-emerald-500/80 hover:bg-emerald-500 transition-colors cursor-pointer" />
-          </div>
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenUndo={() => setIsUndoOpen(true)}
+        undoCount={journals.filter(j => !j.undone).length}
+        viewLayout={viewLayout}
+        setViewLayout={setViewLayout}
+        showInspector={showInspector}
+        setShowInspector={setShowInspector}
+      />
 
-          <div className="text-[11px] font-semibold opacity-70 tracking-tight" style={{ color: theme.fg }}>
-            FileSorter 5.0 • Aurora Glass Edition
-          </div>
-
-          <div className="text-[10px] font-mono opacity-50">
-            Engine v8
-          </div>
-        </div>
-
-        {/* Window Inner Body: Left Sidebar + Right Workspace Canvas */}
-        <div className="flex-1 min-h-0 flex overflow-hidden">
-          {/* Left Navigation Sidebar */}
-          <Sidebar
-            mode={mode}
-            setMode={setMode}
+      {/* Main Canvas Area */}
+      <main className="flex-1 min-h-0 overflow-hidden flex flex-col z-10">
+        {mode === 'sort' && (
+          <SortView
             theme={theme}
-            themeKey={settings.appearance.theme}
-            setThemeKey={k => {
-              const next = { ...settings, appearance: { ...settings.appearance, theme: k } };
-              setSettings(next);
-              saveSettings(next);
-            }}
-            onOpenSettings={() => setIsSettingsOpen(true)}
-            onOpenUndo={() => setIsUndoOpen(true)}
-            undoCount={journals.filter(j => !j.undone).length}
-            onQuickOrganize={() => handlePreview('sort')}
-            onNewFolder={() => showToast("Select or browse target directory.")}
-            totalItemsCount={items.length}
-            totalSizeFormatted={totalSizeFormatted}
+            settings={settings}
+            items={items}
+            setItems={setItems}
+            scopePath={scopePath}
+            setScopePath={setScopePath}
+            destPath={destPath}
+            setDestPath={setDestPath}
+            onPreview={handlePreview}
+            onSort={handleSort}
+            onUndoLast={handleUndoLast}
+            onLoadPreset={handleLoadPreset}
+            onUploadFiles={handleUploadFiles}
+            isLoading={isLoading}
+            progressPercent={progressPercent}
+            progressStage={progressStage}
+            viewLayout={viewLayout}
+            showInspector={showInspector}
+            setShowInspector={setShowInspector}
           />
+        )}
 
-          {/* Right Workspace Main Column */}
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            {/* Top Toolbar / Mode Switcher */}
-            <Header
-              mode={mode}
-              setMode={setMode}
-              theme={theme}
-              themeKey={settings.appearance.theme}
-              setThemeKey={k => {
-                const next = { ...settings, appearance: { ...settings.appearance, theme: k } };
-                setSettings(next);
-                saveSettings(next);
-              }}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-              onOpenUndo={() => setIsUndoOpen(true)}
-              undoCount={journals.filter(j => !j.undone).length}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              showInspector={showInspector}
-              setShowInspector={setShowInspector}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-            />
+        {mode === 'search' && (
+          <SearchView
+            theme={theme}
+            settings={settings}
+            items={items}
+            scopePath={scopePath}
+          />
+        )}
 
-            {/* View Containers */}
-            <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              {mode === 'sort' && (
-                <SortView
-                  theme={theme}
-                  settings={settings}
-                  items={items}
-                  setItems={setItems}
-                  scopePath={scopePath}
-                  setScopePath={setScopePath}
-                  destPath={destPath}
-                  setDestPath={setDestPath}
-                  onPreview={handlePreview}
-                  onSort={handleSort}
-                  onUndoLast={handleUndoLast}
-                  onLoadPreset={handleLoadPreset}
-                  onUploadFiles={handleUploadFiles}
-                  isLoading={isLoading}
-                  progressPercent={progressPercent}
-                  progressStage={progressStage}
-                  viewMode={viewMode}
-                  showInspector={showInspector}
-                  setShowInspector={setShowInspector}
-                  searchQuery={searchQuery}
-                />
-              )}
+        {mode === 'duplicates' && (
+          <DuplicatesView
+            theme={theme}
+            items={items}
+            onRemoveDuplicates={handleRemoveDuplicates}
+          />
+        )}
 
-              {mode === 'search' && (
-                <SearchView
-                  theme={theme}
-                  settings={settings}
-                  items={items}
-                  scopePath={scopePath}
-                />
-              )}
+        {mode === 'audit' && (
+          <SortView
+            theme={theme}
+            settings={settings}
+            items={items}
+            setItems={setItems}
+            scopePath={scopePath}
+            setScopePath={setScopePath}
+            destPath={destPath}
+            setDestPath={setDestPath}
+            onPreview={() => handlePreview('audit')}
+            onSort={handleSort}
+            onUndoLast={handleUndoLast}
+            onLoadPreset={handleLoadPreset}
+            onUploadFiles={handleUploadFiles}
+            isLoading={isLoading}
+            progressPercent={progressPercent}
+            progressStage={progressStage}
+            auditModeOnly={true}
+            viewLayout={viewLayout}
+            showInspector={showInspector}
+            setShowInspector={setShowInspector}
+          />
+        )}
 
-              {mode === 'duplicates' && (
-                <DuplicatesView
-                  theme={theme}
-                  items={items}
-                  onRemoveDuplicates={handleRemoveDuplicates}
-                />
-              )}
-
-              {mode === 'audit' && (
-                <SortView
-                  theme={theme}
-                  settings={settings}
-                  items={items}
-                  setItems={setItems}
-                  scopePath={scopePath}
-                  setScopePath={setScopePath}
-                  destPath={destPath}
-                  setDestPath={setDestPath}
-                  onPreview={() => handlePreview('audit')}
-                  onSort={handleSort}
-                  onUndoLast={handleUndoLast}
-                  onLoadPreset={handleLoadPreset}
-                  onUploadFiles={handleUploadFiles}
-                  isLoading={isLoading}
-                  progressPercent={progressPercent}
-                  progressStage={progressStage}
-                  viewMode={viewMode}
-                  showInspector={showInspector}
-                  setShowInspector={setShowInspector}
-                  searchQuery={searchQuery}
-                  auditModeOnly={true}
-                />
-              )}
-
-              {mode === 'rules' && (
-                <RulesView
-                  theme={theme}
-                  userRules={userRules}
-                  setUserRules={setUserRules}
-                />
-              )}
-            </main>
-          </div>
-        </div>
-      </div>
+        {mode === 'rules' && (
+          <RulesView
+            theme={theme}
+            userRules={userRules}
+            setUserRules={setUserRules}
+          />
+        )}
+      </main>
 
       {/* Settings Modal */}
       <SettingsModal

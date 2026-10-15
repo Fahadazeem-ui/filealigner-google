@@ -4,17 +4,53 @@
   body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     user-select: none;
     -webkit-user-select: none;
     overflow: hidden;
   }
 }
 
-/* Subtle Aurora scrollbar */
+/* Custom soft glass styles */
+.glass-container {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-pill {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-pill:hover {
+  transform: translateY(-1px);
+}
+
+/* Ambient glow animations */
+@keyframes auroraBloom {
+  0% {
+    transform: scale(1) translate(0px, 0px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.12) translate(15px, -15px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1) translate(0px, 0px);
+    opacity: 0.7;
+  }
+}
+
+.animate-aurora {
+  animation: auroraBloom 14s ease-in-out infinite alternate;
+}
+
+/* Custom soft scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -22,48 +58,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(140, 155, 185, 0.28);
+  background: rgba(140, 150, 180, 0.25);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(140, 155, 185, 0.45);
-}
-
-/* Soft blooming ambient animations */
-@keyframes bloomFloat {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: translate(25px, -20px) scale(1.08);
-    opacity: 0.85;
-  }
-}
-
-@keyframes bloomFloatReverse {
-  0%, 100% {
-    transform: translate(0px, 0px) scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: translate(-30px, 20px) scale(1.1);
-    opacity: 0.8;
-  }
-}
-
-.animate-bloom-1 {
-  animation: bloomFloat 14s ease-in-out infinite;
-}
-
-.animate-bloom-2 {
-  animation: bloomFloatReverse 18s ease-in-out infinite;
-}
-
-/* Smooth glass transition helper */
-.glass-panel {
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(140, 150, 180, 0.45);
 }

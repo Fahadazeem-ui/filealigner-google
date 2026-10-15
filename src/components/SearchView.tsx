@@ -1,27 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { ThemeColors, BadgeTheme } from '../engine/themes';
+import { ThemeColors } from '../engine/themes';
 import { FileItem, SearchHit, AppSettings } from '../types';
 import { formatBytes } from '../engine/sampleFiles';
+import { FileBadgeIcon } from './FileBadgeIcon';
 import { TOP_LEVEL_DOMAINS, PARTIAL_EXT } from '../engine/taxonomy';
-import { 
-  Search, 
-  Filter, 
-  ShieldCheck, 
-  FileText, 
-  ArrowUpDown, 
-  ChevronRight, 
-  X, 
-  Folder, 
-  Copy, 
-  CheckCircle2, 
-  Sparkles,
-  Info,
-  SlidersHorizontal,
-  FileArchive,
-  Image as ImageIcon,
-  FileCode,
-  FileBox
-} from 'lucide-react';
+import { Search, Filter, ShieldCheck, ArrowUpDown, X, Sparkles } from 'lucide-react';
 
 interface SearchViewProps {
   theme: ThemeColors;
@@ -43,16 +26,13 @@ export const SearchView: React.FC<SearchViewProps> = ({
   const [activeHitId, setActiveHitId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<'name' | 'size' | 'confidence' | 'mtime'>('confidence');
   const [sortAsc, setSortAsc] = useState(false);
-  const [showDetails, setShowDetails] = useState(true);
-  const [copied, setCopied] = useState(false);
 
-  // Content-aware search filter
+  // Content-aware search
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
 
     return items
       .filter(item => {
-        // Exclude partial downloads
         if (excludePartial) {
           const lower = item.name.toLowerCase();
           for (const pe of PARTIAL_EXT) {
@@ -60,17 +40,14 @@ export const SearchView: React.FC<SearchViewProps> = ({
           }
         }
 
-        // Sure only
         if (sureOnly && item.verdict.level !== 'Sure') {
           return false;
         }
 
-        // Category filter
         if (selectedCategory !== 'All' && !item.category.toLowerCase().startsWith(selectedCategory.toLowerCase())) {
           return false;
         }
 
-        // Search query matching
         if (q) {
           const matchName = item.name.toLowerCase().includes(q);
           const matchCat = item.category.toLowerCase().includes(q);
@@ -87,8 +64,8 @@ export const SearchView: React.FC<SearchViewProps> = ({
         let conf = item.verdict.confidence;
         const evidence = [...item.verdict.evidence];
         if (q && item.name.toLowerCase().includes(q)) {
-          evidence.unshift(`Filename contains query "${q}"`);
-          conf = Math.min(1.0, conf + 0.05);
+          evidence.unshift(`Query match: "${q}" found in filename`);
+          conf = Math.min(1.0, conf + 0.1);
         }
 
         return {
@@ -128,296 +105,271 @@ export const SearchView: React.FC<SearchViewProps> = ({
     }
   };
 
-  const handleCopy = (txt: string) => {
-    navigator.clipboard.writeText(txt);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const categoriesList = ['All', 'Games', 'Documents', 'Images', 'Archives', 'Software', 'AI & Models', 'Review'];
-
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-hidden select-none">
-      {/* Top Search Controls */}
+    <div className="flex flex-col h-full overflow-hidden select-none px-4 py-2">
+      {/* Search Header Controls */}
       <div 
-        className="px-6 py-4 border-b space-y-3.5 transition-colors duration-200"
-        style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder }}
+        className="p-3.5 rounded-3xl border glass-container shadow-md mb-3 space-y-3"
+        style={{
+          backgroundColor: theme.glassCard,
+          borderColor: theme.glassBorder,
+        }}
       >
-        {/* Main Search Query Bar */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Query input pill */}
           <div 
-            className="flex-1 flex items-center gap-3 px-4 py-2.5 rounded-2xl border shadow-inner transition-all"
+            className="flex-1 flex items-center px-4 py-2 rounded-full border text-xs shadow-inner"
             style={{
-              backgroundColor: theme.entryBg,
-              borderColor: theme.entryBorder,
+              backgroundColor: theme.entry_bg,
+              borderColor: theme.glassBorder,
             }}
           >
-            <Search className="w-4 h-4 opacity-60" style={{ color: theme.accent }} />
+            <Search className="w-4 h-4 opacity-50 shrink-0 mr-2" style={{ color: theme.accent }} />
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search by true file signature, document keywords, project name..."
+              placeholder="Search by true content type, keyword, filename, or evidence..."
               className="w-full bg-transparent border-none outline-none text-xs font-medium"
               style={{ color: theme.fg }}
             />
             {query && (
-              <button 
-                onClick={() => setQuery('')}
-                className="opacity-50 hover:opacity-100 cursor-pointer"
-              >
+              <button onClick={() => setQuery('')} className="opacity-50 hover:opacity-100">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Toggle Inspector Pane Button */}
-          <button
-            onClick={() => setShowDetails(prev => !prev)}
-            className="px-4 py-2.5 rounded-2xl border text-xs font-semibold flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
-            style={{
-              background: showDetails ? theme.pillActiveBg : theme.buttonBg,
-              borderColor: theme.panelBorder,
-              color: showDetails ? theme.pillActiveFg : theme.fg,
-            }}
-          >
-            <Info className="w-4 h-4" />
-            <span>{showDetails ? "Hide Info" : "Details"}</span>
-          </button>
+          {/* Category Dropdown */}
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 opacity-60" />
+            <select
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value)}
+              className="px-3 py-2 rounded-full border text-xs font-medium outline-none cursor-pointer shadow-xs"
+              style={{
+                backgroundColor: theme.button,
+                borderColor: theme.glassBorder,
+                color: theme.fg,
+              }}
+            >
+              <option value="All">All Categories</option>
+              {TOP_LEVEL_DOMAINS.map(domain => (
+                <option key={domain} value={domain}>{domain}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Category Pill Filters & Toggles */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-            {categoriesList.map(cat => {
-              const isActive = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className="px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer"
-                  style={{
-                    background: isActive ? theme.pillActiveBg : 'transparent',
-                    color: isActive ? theme.pillActiveFg : theme.fg_muted,
-                    border: isActive ? `1px solid ${theme.panelBorder}` : '1px solid transparent',
-                  }}
-                >
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
-
+        {/* Toggles */}
+        <div className="flex flex-wrap items-center justify-between text-xs pt-1 border-t" style={{ borderColor: theme.glassBorder }}>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer font-medium" style={{ color: theme.fg }}>
+            <label className="flex items-center gap-1.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={sureOnly}
                 onChange={e => setSureOnly(e.target.checked)}
-                className="rounded accent-indigo-500"
+                className="rounded accent-blue-600"
               />
-              <span>Sure Only</span>
+              <span style={{ color: theme.fg }}>Sure only (&gt;= 85% confidence)</span>
             </label>
 
-            <label className="flex items-center gap-2 cursor-pointer font-medium" style={{ color: theme.fg }}>
+            <label className="flex items-center gap-1.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={excludePartial}
                 onChange={e => setExcludePartial(e.target.checked)}
-                className="rounded accent-indigo-500"
+                className="rounded accent-blue-600"
               />
-              <span>Exclude Partials</span>
+              <span style={{ color: theme.fg }}>Exclude partial (.crdownload, .part)</span>
             </label>
           </div>
+
+          <span className="font-mono text-[11px] opacity-75">
+            Found <strong style={{ color: theme.accent }}>{searchResults.length}</strong> matching hits
+          </span>
         </div>
       </div>
 
-      {/* Main Search Results & Collapsible Inspector Split */}
-      <div className="flex-1 min-h-0 flex overflow-hidden relative">
+      {/* Main Two-Pane Search Workspace */}
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
         {/* Results List */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-2">
-          {searchResults.length === 0 ? (
-            <div className="py-24 text-center space-y-3">
-              <Search className="w-12 h-12 mx-auto opacity-30" style={{ color: theme.accent }} />
-              <p className="text-sm font-semibold" style={{ color: theme.fg }}>
-                No files matched your search criteria.
-              </p>
-              <p className="text-xs" style={{ color: theme.fg_muted }}>
-                Try modifying your query or unchecking "Sure Only".
-              </p>
+        <div 
+          className="lg:col-span-8 flex flex-col rounded-3xl border glass-container shadow-xl overflow-hidden"
+          style={{
+            backgroundColor: theme.glassCard,
+            borderColor: theme.glassBorder,
+          }}
+        >
+          {/* Table Header */}
+          <div 
+            className="px-5 py-3 border-b text-[11px] font-semibold flex items-center justify-between"
+            style={{ backgroundColor: theme.glassPanel2, borderColor: theme.glassBorder, color: theme.fg_muted }}
+          >
+            <button 
+              onClick={() => toggleSort('name')}
+              className="flex items-center gap-1 hover:brightness-125"
+            >
+              <span>File Name / Path</span>
+              <ArrowUpDown className="w-3 h-3" />
+            </button>
+            <div className="flex items-center gap-6">
+              <button 
+                onClick={() => toggleSort('size')}
+                className="w-20 text-right flex items-center justify-end gap-1 hover:brightness-125"
+              >
+                <span>Size</span>
+                <ArrowUpDown className="w-3 h-3" />
+              </button>
+              <button 
+                onClick={() => toggleSort('confidence')}
+                className="w-28 text-center flex items-center justify-center gap-1 hover:brightness-125"
+              >
+                <span>Confidence / Type</span>
+                <ArrowUpDown className="w-3 h-3" />
+              </button>
             </div>
-          ) : (
-            searchResults.map(hit => {
-              const isActive = activeHit?.id === hit.id;
-              return (
-                <div
-                  key={hit.id}
-                  onClick={() => setActiveHitId(hit.id)}
-                  className="p-3.5 rounded-2xl border flex items-center justify-between gap-4 transition-all duration-200 cursor-pointer hover:scale-[1.005]"
-                  style={{
-                    backgroundColor: isActive ? theme.pillActiveBg : theme.cardBg,
-                    borderColor: isActive ? theme.accent : theme.cardBorder,
-                    boxShadow: isActive ? theme.pillActiveGlow : 'none',
-                  }}
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border shadow-sm"
-                      style={{
-                        backgroundColor: hit.level === 'Sure' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(129, 140, 248, 0.15)',
-                        borderColor: hit.level === 'Sure' ? 'rgba(52, 211, 153, 0.3)' : 'rgba(129, 140, 248, 0.3)',
-                        color: hit.level === 'Sure' ? theme.ok : theme.accent,
-                      }}
-                    >
-                      <FileText className="w-5 h-5" />
+          </div>
+
+          {/* Results list */}
+          <div className="flex-1 overflow-y-auto divide-y" style={{ borderColor: theme.glassBorder }}>
+            {searchResults.length === 0 ? (
+              <div className="py-24 text-center text-xs opacity-60">
+                <Search className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                <p>No files match "{query}".</p>
+                <p className="text-[11px] mt-1">Search by real content keyword, file name, or extension.</p>
+              </div>
+            ) : (
+              searchResults.map(hit => {
+                const isActive = activeHit?.id === hit.id;
+                const badgeColor = 
+                  hit.verdict.dest[0] === 'Review' ? theme.review :
+                  hit.level === 'Sure' ? theme.ok :
+                  hit.level === 'Probably' ? theme.warn : theme.unsure;
+
+                return (
+                  <div
+                    key={hit.id}
+                    onClick={() => setActiveHitId(hit.id)}
+                    className={`px-4 py-2.5 flex items-center justify-between text-xs cursor-pointer transition-colors ${
+                      isActive ? 'font-medium' : 'hover:brightness-105'
+                    }`}
+                    style={{
+                      backgroundColor: isActive ? theme.select : 'transparent',
+                      color: theme.fg,
+                    }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 pr-3">
+                      <FileBadgeIcon name={hit.name} category={hit.category} size="md" />
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold font-mono text-xs">{hit.name}</div>
+                        <div className="text-[10px] truncate opacity-60 font-sans">{hit.category}</div>
+                      </div>
                     </div>
 
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-xs tracking-tight truncate" style={{ color: theme.fg }}>
-                        {hit.name}
-                      </h4>
-                      <div className="flex items-center gap-2 text-[11px] mt-0.5" style={{ color: theme.fg_muted }}>
-                        <span>{formatBytes(hit.size)}</span>
-                        <span>•</span>
-                        <span>{hit.category}</span>
+                    <div className="flex items-center gap-6 shrink-0">
+                      <span className="w-20 text-right font-mono text-[11px] opacity-80">
+                        {formatBytes(hit.size)}
+                      </span>
+                      <div className="w-28 text-center">
+                        <span
+                          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                          style={{
+                            backgroundColor: `${badgeColor}22`,
+                            color: badgeColor,
+                            border: `1px solid ${badgeColor}40`,
+                          }}
+                        >
+                          {hit.level} ({Math.round(hit.confidence * 100)}%)
+                        </span>
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span 
-                      className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
-                      style={{
-                        backgroundColor: hit.level === 'Sure' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(251, 146, 60, 0.15)',
-                        color: hit.level === 'Sure' ? theme.ok : theme.warn,
-                      }}
-                    >
-                      {hit.level} ({Math.round(hit.confidence * 100)}%)
-                    </span>
-                    <ChevronRight className="w-4 h-4 opacity-40" />
-                  </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* Collapsible Inspector Drawer */}
-        {showDetails && activeHit && (
-          <aside 
-            className="w-80 md:w-96 shrink-0 border-l p-5 flex flex-col justify-between overflow-y-auto glass-panel select-none transition-all duration-300"
-            style={{
-              backgroundColor: theme.sidebarBg,
-              borderColor: theme.sidebarBorder,
-              boxShadow: theme.windowShadow,
-            }}
-          >
-            <div className="space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: theme.panelBorder }}>
-                <span className="font-bold text-xs tracking-tight" style={{ color: theme.fg }}>
-                  Hit Evidence & Path
-                </span>
-                <button
-                  onClick={() => setShowDetails(false)}
-                  className="p-1.5 rounded-xl border opacity-70 hover:opacity-100 cursor-pointer"
-                  style={{ backgroundColor: theme.buttonBg, borderColor: theme.panelBorder }}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Hit Header */}
-              <div 
-                className="p-4 rounded-3xl border space-y-2"
-                style={{ backgroundColor: theme.cardBg, borderColor: theme.cardBorder }}
+        {/* Right Detail Pane */}
+        <div 
+          className="lg:col-span-4 rounded-3xl border glass-container shadow-xl p-4 overflow-y-auto"
+          style={{
+            backgroundColor: theme.glassCard,
+            borderColor: theme.glassBorder,
+            color: theme.fg,
+          }}
+        >
+          <div className="border-b pb-2 mb-3 flex items-center justify-between" style={{ borderColor: theme.glassBorder }}>
+            <span className="text-xs font-bold uppercase tracking-wider opacity-70 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4" style={{ color: theme.accent }} />
+              Content-Aware Detection
+            </span>
+            {activeHit && (
+              <span 
+                className="text-[11px] font-mono px-2 py-0.5 rounded-full font-bold"
+                style={{
+                  backgroundColor: `${theme.ok}22`,
+                  color: theme.ok,
+                }}
               >
-                <h3 className="font-bold text-xs tracking-tight break-all" style={{ color: theme.fg }}>
-                  {activeHit.name}
-                </h3>
-                <p className="text-[11px] font-medium" style={{ color: theme.fg_muted }}>
-                  {activeHit.verdict.label}
-                </p>
-                <div className="pt-1">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="opacity-70">Confidence:</span>
-                    <span className="font-mono font-bold" style={{ color: activeHit.level === 'Sure' ? theme.ok : theme.warn }}>
-                      {Math.round(activeHit.confidence * 100)}% ({activeHit.level})
-                    </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full overflow-hidden p-0.5 border" style={{ backgroundColor: theme.entryBg, borderColor: theme.entryBorder }}>
-                    <div 
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${activeHit.confidence * 100}%`,
-                        background: theme.storageGradient,
-                      }}
-                    />
-                  </div>
+                {activeHit.level}
+              </span>
+            )}
+          </div>
+
+          {activeHit ? (
+            <div className="space-y-4 text-xs">
+              <div className="p-3 rounded-2xl border flex items-center gap-3" style={{ backgroundColor: theme.glassPanel, borderColor: theme.glassBorder }}>
+                <FileBadgeIcon name={activeHit.name} category={activeHit.category} size="lg" />
+                <div className="min-w-0">
+                  <div className="font-bold text-xs truncate font-mono">{activeHit.name}</div>
+                  <div className="text-[11px] font-mono opacity-60">{formatBytes(activeHit.size)}</div>
                 </div>
               </div>
 
-              {/* Path & Copy */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-semibold" style={{ color: theme.fg_muted }}>
-                  <span>Location:</span>
-                  <button
-                    onClick={() => handleCopy(activeHit.path)}
-                    className="text-[11px] hover:underline cursor-pointer flex items-center gap-1"
-                    style={{ color: theme.accent }}
-                  >
-                    <Copy className="w-3 h-3" />
-                    <span>{copied ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
-                <div 
-                  className="p-3 rounded-2xl border text-xs font-mono break-all"
-                  style={{ backgroundColor: theme.entryBg, borderColor: theme.entryBorder, color: theme.accent }}
-                >
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60">Source Path</label>
+                <div className="p-2.5 rounded-xl font-mono text-[11px] break-all mt-1 border" style={{ backgroundColor: theme.entry_bg, borderColor: theme.glassBorder }}>
                   {activeHit.path}
                 </div>
               </div>
 
-              {/* Evidence Chain */}
-              <div className="space-y-2">
-                <span className="text-xs font-semibold" style={{ color: theme.fg }}>
-                  Why this file was identified:
-                </span>
-                <div 
-                  className="p-3.5 rounded-2xl border space-y-2 text-xs"
-                  style={{ backgroundColor: theme.cardBg, borderColor: theme.cardBorder }}
-                >
-                  {activeHit.evidence.map((ev, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: theme.ok }} />
-                      <span className="leading-relaxed text-[11px]" style={{ color: theme.fg }}>{ev}</span>
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60">Real Detected Category</label>
+                <div className="p-2.5 rounded-xl font-semibold mt-1 border text-xs" style={{ backgroundColor: theme.entry_bg, borderColor: theme.glassBorder, color: theme.accent }}>
+                  {activeHit.category}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60">Verdict Description</label>
+                <div className="p-2.5 rounded-xl font-medium mt-1 border" style={{ backgroundColor: theme.glassPanel, borderColor: theme.glassBorder }}>
+                  {activeHit.verdict.label}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold opacity-60 mb-1.5 block">
+                  Search &amp; Content Evidence:
+                </label>
+                <div className="p-3 rounded-xl border space-y-1.5" style={{ backgroundColor: theme.glassPanel, borderColor: theme.glassBorder }}>
+                  {activeHit.evidence.map((ev, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-sm leading-none" style={{ color: theme.accent }}>•</span>
+                      <span className="text-[11px]">{ev}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
-            <div className="pt-4 border-t" style={{ borderColor: theme.panelBorder }}>
-              <div className="flex justify-between text-[11px]" style={{ color: theme.fg_muted }}>
-                <span>Size: <strong style={{ color: theme.fg }}>{formatBytes(activeHit.size)}</strong></span>
-                <span>Modified: <strong style={{ color: theme.fg }}>{new Date(activeHit.mtime).toLocaleDateString()}</strong></span>
-              </div>
+          ) : (
+            <div className="py-20 text-center opacity-60 text-xs">
+              Select any search hit to inspect details.
             </div>
-          </aside>
-        )}
+          )}
+        </div>
       </div>
-
-      {/* Search Footer */}
-      <footer 
-        className="px-6 py-2.5 border-t flex items-center justify-between text-xs"
-        style={{ backgroundColor: theme.panelBg2, borderColor: theme.panelBorder, color: theme.fg_muted }}
-      >
-        <span>
-          Showing <strong style={{ color: theme.fg }}>{searchResults.length}</strong> of {items.length} files
-        </span>
-        <span className="text-[11px]">
-          Content-aware search inspects underlying bytes and metadata.
-        </span>
-      </footer>
     </div>
   );
 };
